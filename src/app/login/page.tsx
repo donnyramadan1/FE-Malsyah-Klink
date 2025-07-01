@@ -33,6 +33,7 @@ export default function HalamanLogin() {
       } else {
         setError("Username atau password salah.");
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       setError("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
