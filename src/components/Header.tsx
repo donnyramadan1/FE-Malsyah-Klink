@@ -32,6 +32,8 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("authData");
     await new Promise((resolve) => setTimeout(resolve, 1000));
     router.push("/login");
   };
