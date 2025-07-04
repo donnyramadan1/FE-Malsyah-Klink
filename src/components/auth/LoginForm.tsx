@@ -1,4 +1,3 @@
-// src/components/auth/LoginForm.tsx
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence, Variants, Transition } from "framer-motion";

@@ -1,17 +1,23 @@
-// app/dashboard/layout.tsx
 "use client";
 import { ReactNode, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiMenu, FiX } from "react-icons/fi";
+import { useAuth } from "@/hooks/useAuth";
+import { redirect } from "next/navigation";
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
+export default function ProtectedLayout({ children }: { children: ReactNode }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated()) {
+    redirect("/login");
+  }
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
-      {/* Mobile Sidebar Overlay */}
+      {/* Overlay Sidebar Mobile */}
       <AnimatePresence>
         {mobileSidebarOpen && (
           <motion.div
@@ -44,7 +50,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         )}
       </AnimatePresence>
 
-      {/* Main Content */}
+      {/* Konten Utama */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header onMenuToggle={() => setMobileSidebarOpen(!mobileSidebarOpen)} />
         <motion.main
@@ -57,7 +63,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </motion.main>
       </div>
 
-      {/* Mobile Sidebar Toggle Button */}
+      {/* Tombol Toggle Sidebar Mobile */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}

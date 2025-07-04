@@ -1,4 +1,29 @@
-import { LoginResponse } from "@/types/auth";
+export interface LoginResponse {
+  code: number;
+  message?: string;
+  data?: {
+    token: string;
+    user: {
+      id: number;
+      username: string;
+      fullName: string;
+      email: string;
+    };
+    roles: {
+      id: number;
+      name: string;
+    };
+    menus: Array<{
+      id: number;
+      parentId: number | null;
+      title: string;
+      icon: string;
+      path: string;
+      orderNum: number;
+      isActive: boolean;
+    }>;
+  };
+}
 
 export const login = async (
   username: string,
@@ -16,13 +41,15 @@ export const login = async (
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || "Login failed");
+      throw new Error(errorData.message || "Login gagal");
     }
 
     return response.json();
   } catch (error) {
-    console.error("API Error:", error);
-    throw new Error("Failed to connect to server. Please try again later.");
+    console.error("Error API:", error);
+    throw new Error(
+      "Gagal terhubung ke server. Silakan coba lagi beberapa saat."
+    );
   }
 };
 
@@ -33,7 +60,7 @@ export const refreshToken = async (): Promise<{ token: string }> => {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to refresh token");
+    throw new Error("Gagal memperbarui token");
   }
 
   return response.json();

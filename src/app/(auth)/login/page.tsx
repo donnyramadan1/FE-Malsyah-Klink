@@ -1,9 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import Image from "next/image";
 import { useAuth } from "@/hooks/useAuth";
 import LoginForm from "@/components/auth/LoginForm";
+import { redirect } from "next/navigation";
 
 const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -16,8 +17,13 @@ const itemVariants: Variants = {
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const { handleLogin, isLoading, error, isSuccess } = useAuth();
+  const { handleLogin, isLoading, error, isSuccess, isAuthenticated } = useAuth();
 
+  useEffect(() => {
+    if (isAuthenticated()) {
+      redirect("/dashboard");
+    }
+  }, [isAuthenticated]);
   return (
     <div
       id="login-container"
