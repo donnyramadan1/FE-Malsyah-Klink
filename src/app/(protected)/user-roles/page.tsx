@@ -1,18 +1,28 @@
 "use client";
 import { useUserRoles } from "@/hooks/useUserRoles";
-import { useUsers } from "@/hooks/useUsers";
 import { useRoles } from "@/hooks/useRoles";
 import UserRoleTable from "@/components/user-roles/UserRoleTable";
-import UserRoleAssignmentModal from "@/components/user-roles/UserRoleAssignmentModal";
+import RoleAssignmentModal from "@/components/user-roles/UserRoleAssignmentModal";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { UserWithRolesDto } from "@/types/userRole";
 
-export default function UserRolePage() {
-  const { userRoles, loading, assignRoleToUser, removeRoleFromUser } =
+export default function UserRolesPage() {
+  const { usersWithRoles, loading, error, updateRoleAssignments } =
     useUserRoles();
-  const { users } = useUsers();
   const { roles } = useRoles();
-  const [open, setOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserWithRolesDto | null>(
+    null
+  );
+
+  const handleEdit = (userId: number) => {
+    const user = usersWithRoles.find((u) => u.id === userId) || null;
+    setSelectedUser(user);
+  };
+
+  const handleSaveRoles = async (userId: number, roleIds: number[]) => {
+    await updateRoleAssignments({ userId, roleIds });
+  };
 
   return (
     <div className="p-4 md:p-8">
@@ -28,42 +38,28 @@ export default function UserRolePage() {
               User Role Management
             </h1>
             <p className="text-gray-500 mt-1">
-              Manage role assignments for users
+              Manage which roles are assigned to each user
             </p>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setOpen(true)}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2 px-6 rounded-lg transition-all shadow-md flex items-center gap-2"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Assign Role to User
-          </motion.button>
         </div>
 
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
+
         <UserRoleTable
-          userRoles={userRoles}
+          data={usersWithRoles}
           loading={loading}
-          onRemove={removeRoleFromUser}
+          onEdit={handleEdit}
         />
 
-        <UserRoleAssignmentModal
-          open={open}
-          onClose={() => setOpen(false)}
-          onAssign={assignRoleToUser}
-          users={users}
+        <RoleAssignmentModal
+          open={!!selectedUser}
+          onClose={() => setSelectedUser(null)}
+          onSave={handleSaveRoles}
+          user={selectedUser}
           roles={roles}
         />
       </motion.div>

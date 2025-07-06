@@ -1,46 +1,49 @@
 "use client";
 import { Dialog, Transition } from "@headlessui/react";
-import { Fragment, useState } from "react";
-import { AssignUserRoleDto } from "@/types/userRole";
-import { motion } from "framer-motion";
-import { UserDto } from "@/types/user";
+import { Fragment, useState, useEffect } from "react";
 import { RoleDto } from "@/types/role";
+import { UserWithRolesDto } from "@/types/userRole";
 
-interface Props {
+interface RoleAssignmentModalProps {
   open: boolean;
   onClose: () => void;
-  onAssign: (data: AssignUserRoleDto) => Promise<void>;
-  users: UserDto[];
+  onSave: (userId: number, roleIds: number[]) => Promise<void>;
+  user: UserWithRolesDto | null;
   roles: RoleDto[];
 }
 
-export default function UserRoleAssignmentModal({
+export default function RoleAssignmentModal({
   open,
   onClose,
-  onAssign,
-  users,
+  onSave,
+  user,
   roles,
-}: Props) {
-  const [formData, setFormData] = useState<AssignUserRoleDto>({
-    userId: 0,
-    roleId: 0,
-  });
+}: RoleAssignmentModalProps) {
+  const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: parseInt(value),
-    }));
+  useEffect(() => {
+    if (user) {
+      setSelectedRoles(user.roles.map((role) => role.id));
+    }
+  }, [user]);
+
+  const handleRoleToggle = (roleId: number) => {
+    setSelectedRoles((prev) =>
+      prev.includes(roleId)
+        ? prev.filter((id) => id !== roleId)
+        : [...prev, roleId]
+    );
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    if (!user) return;
     setIsSubmitting(true);
     try {
-      await onAssign(formData);
+      await onSave(user.id, selectedRoles);
       onClose();
+    } catch (error) {
+      console.error("Failed to update roles:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -61,129 +64,95 @@ export default function UserRoleAssignmentModal({
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
         </Transition.Child>
 
-        <div className="fixed inset-0 overflow-y-auto flex items-center justify-center p-4">
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-200"
-            enterFrom="opacity-0 scale-95"
-            enterTo="opacity-100 scale-100"
-            leave="ease-in duration-100"
-            leaveFrom="opacity-100 scale-100"
-            leaveTo="opacity-0 scale-95"
-          >
-            <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <Dialog.Title
-                  as="h3"
-                  className="text-lg font-medium leading-6 text-gray-900 flex items-center gap-2"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-blue-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
-                  Assign Role to User
+        <div className="fixed inset-0 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-200"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-100"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <Dialog.Panel className="w-full max-w-md transform rounded-2xl bg-white p-6 shadow-xl transition-all">
+                <Dialog.Title className="text-xl font-bold text-gray-900">
+                  Manage Roles for {user?.fullName}
                 </Dialog.Title>
-                <div className="mt-4">
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        User
-                        <span className="text-red-500">*</span>
+                <Dialog.Description className="mt-1 text-sm text-gray-500">
+                  Select the roles to assign to this user
+                </Dialog.Description>
+
+                <div className="mt-6 space-y-4">
+                  {roles.map((role) => (
+                    <div key={role.id} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`role-${role.id}`}
+                        checked={selectedRoles.includes(role.id)}
+                        onChange={() => handleRoleToggle(role.id)}
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <label
+                        htmlFor={`role-${role.id}`}
+                        className="ml-3 block text-sm font-medium text-gray-700"
+                      >
+                        {role.name}
+                        <span className="block text-xs text-gray-500">
+                          {role.description}
+                        </span>
                       </label>
-                      <select
-                        name="userId"
-                        required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                        onChange={handleChange}
-                        value={formData.userId}
-                      >
-                        <option value="">Select User</option>
-                        {users.map((user) => (
-                          <option key={user.id} value={user.id}>
-                            {user.username} ({user.fullName})
-                          </option>
-                        ))}
-                      </select>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Role
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        name="roleId"
-                        required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                        onChange={handleChange}
-                        value={formData.roleId}
-                      >
-                        <option value="">Select Role</option>
-                        {roles.map((role) => (
-                          <option key={role.id} value={role.id}>
-                            {role.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex justify-end gap-3 pt-4">
-                      <button
-                        type="button"
-                        onClick={onClose}
-                        disabled={isSubmitting}
-                        className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={
-                          isSubmitting || !formData.userId || !formData.roleId
-                        }
-                        className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-lg shadow-sm transition-all disabled:opacity-50 flex items-center"
-                      >
-                        {isSubmitting && (
-                          <svg
-                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                        )}
-                        Assign
-                      </button>
-                    </div>
-                  </form>
+                  ))}
                 </div>
-              </motion.div>
-            </Dialog.Panel>
-          </Transition.Child>
+
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    disabled={isSubmitting}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </button>
+                </div>
+              </Dialog.Panel>
+            </Transition.Child>
+          </div>
         </div>
       </Dialog>
     </Transition>
