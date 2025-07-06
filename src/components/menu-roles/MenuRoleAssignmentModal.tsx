@@ -1,46 +1,63 @@
 "use client";
 import { Dialog, Transition } from "@headlessui/react";
-import { Fragment, useState } from "react";
-import { AssignMenuRoleDto } from "@/types/menuRole";
-import { motion } from "framer-motion";
+import { Fragment, useState, useEffect } from "react";
 import { MenuDto } from "@/types/menu";
 import { RoleDto } from "@/types/role";
+import { MenuWithRolesDto, RoleWithMenusDto } from "@/types/menuRole";
 
-interface Props {
+interface MenuRoleAssignmentModalProps {
   open: boolean;
   onClose: () => void;
-  onAssign: (data: AssignMenuRoleDto) => Promise<void>;
-  menus: MenuDto[];
-  roles: RoleDto[];
+  onSave: (data: {
+    menuId?: number;
+    roleId?: number;
+    targetIds: number[];
+  }) => Promise<void>;
+  mode: "menu" | "role";
+  currentItem: MenuWithRolesDto | RoleWithMenusDto | null;
+  allItems: (MenuDto | RoleDto)[];
 }
 
 export default function MenuRoleAssignmentModal({
   open,
   onClose,
-  onAssign,
-  menus,
-  roles,
-}: Props) {
-  const [formData, setFormData] = useState<AssignMenuRoleDto>({
-    menuId: 0,
-    roleId: 0,
-  });
+  onSave,
+  mode,
+  currentItem,
+  allItems,
+}: MenuRoleAssignmentModalProps) {
+  const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: parseInt(value),
-    }));
+  useEffect(() => {
+    if (currentItem) {
+      setSelectedItems(
+        mode === "menu"
+          ? (currentItem as MenuWithRolesDto).roles.map((r) => r.id)
+          : (currentItem as RoleWithMenusDto).menus.map((m) => m.id)
+      );
+    }
+  }, [currentItem, mode]);
+
+  const handleItemToggle = (itemId: number) => {
+    setSelectedItems((prev) =>
+      prev.includes(itemId)
+        ? prev.filter((id) => id !== itemId)
+        : [...prev, itemId]
+    );
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    if (!currentItem) return;
     setIsSubmitting(true);
     try {
-      await onAssign(formData);
+      await onSave({
+        [mode === "menu" ? "menuId" : "roleId"]: currentItem.id,
+        targetIds: selectedItems,
+      });
       onClose();
+    } catch (error) {
+      console.error("Failed to update assignments:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -61,129 +78,107 @@ export default function MenuRoleAssignmentModal({
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
         </Transition.Child>
 
-        <div className="fixed inset-0 overflow-y-auto flex items-center justify-center p-4">
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-200"
-            enterFrom="opacity-0 scale-95"
-            enterTo="opacity-100 scale-100"
-            leave="ease-in duration-100"
-            leaveFrom="opacity-100 scale-100"
-            leaveTo="opacity-0 scale-95"
-          >
-            <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <Dialog.Title
-                  as="h3"
-                  className="text-lg font-medium leading-6 text-gray-900 flex items-center gap-2"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-blue-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
-                  Assign Menu to Role
+        <div className="fixed inset-0 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-200"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-100"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <Dialog.Panel className="w-full max-w-md transform rounded-2xl bg-white p-6 shadow-xl transition-all">
+                <Dialog.Title className="text-xl font-bold text-gray-900">
+                  {mode === "menu"
+                    ? `Manage Roles for Menu: ${
+                        (currentItem as MenuWithRolesDto)?.title
+                      }`
+                    : `Manage Menus for Role: ${
+                        (currentItem as RoleWithMenusDto)?.name
+                      }`}
                 </Dialog.Title>
-                <div className="mt-4">
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Menu
-                        <span className="text-red-500">*</span>
+                <Dialog.Description className="mt-1 text-sm text-gray-500">
+                  {mode === "menu"
+                    ? "Select which roles can access this menu"
+                    : "Select which menus this role can access"}
+                </Dialog.Description>
+
+                <div className="mt-6 space-y-3 max-h-96 overflow-y-auto">
+                  {allItems.map((item) => (
+                    <div key={item.id} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`item-${item.id}`}
+                        checked={selectedItems.includes(item.id)}
+                        onChange={() => handleItemToggle(item.id)}
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <label
+                        htmlFor={`item-${item.id}`}
+                        className="ml-3 block text-sm font-medium text-gray-700"
+                      >
+                        {"name" in item ? item.name : item.title}
+                        <span className="block text-xs text-gray-500">
+                          {"description" in item
+                            ? item.description
+                            : "path" in item
+                            ? (item as MenuDto).path
+                            : ""}
+                        </span>
                       </label>
-                      <select
-                        name="menuId"
-                        required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                        onChange={handleChange}
-                        value={formData.menuId}
-                      >
-                        <option value="">Select Menu</option>
-                        {menus.map((menu) => (
-                          <option key={menu.id} value={menu.id}>
-                            {menu.title} ({menu.path})
-                          </option>
-                        ))}
-                      </select>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Role
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        name="roleId"
-                        required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                        onChange={handleChange}
-                        value={formData.roleId}
-                      >
-                        <option value="">Select Role</option>
-                        {roles.map((role) => (
-                          <option key={role.id} value={role.id}>
-                            {role.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex justify-end gap-3 pt-4">
-                      <button
-                        type="button"
-                        onClick={onClose}
-                        disabled={isSubmitting}
-                        className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={
-                          isSubmitting || !formData.menuId || !formData.roleId
-                        }
-                        className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-lg shadow-sm transition-all disabled:opacity-50 flex items-center"
-                      >
-                        {isSubmitting && (
-                          <svg
-                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                        )}
-                        Assign
-                      </button>
-                    </div>
-                  </form>
+                  ))}
                 </div>
-              </motion.div>
-            </Dialog.Panel>
-          </Transition.Child>
+
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    disabled={isSubmitting}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </button>
+                </div>
+              </Dialog.Panel>
+            </Transition.Child>
+          </div>
         </div>
       </Dialog>
     </Transition>

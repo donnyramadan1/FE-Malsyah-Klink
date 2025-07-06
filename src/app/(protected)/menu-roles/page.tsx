@@ -6,13 +6,45 @@ import MenuRoleTable from "@/components/menu-roles/MenuRoleTable";
 import MenuRoleAssignmentModal from "@/components/menu-roles/MenuRoleAssignmentModal";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { MenuWithRolesDto, RoleWithMenusDto } from "@/types/menuRole";
 
-export default function MenuRolePage() {
-  const { menuRoles, loading, assignMenuToRole, removeMenuFromRole } =
-    useMenuRoles();
+export default function MenuRolesPage() {
+  const {
+    menusWithRoles,
+    rolesWithMenus,
+    viewMode,
+    setViewMode,
+    loading,
+    error,
+    updateMenuRoles,
+  } = useMenuRoles();
+
   const { menus } = useMenus();
   const { roles } = useRoles();
-  const [open, setOpen] = useState(false);
+
+  const [currentItem, setCurrentItem] = useState<
+    MenuWithRolesDto | RoleWithMenusDto | null
+  >(null);
+
+  const handleEdit = (id: number) => {
+    const item =
+      viewMode === "menus"
+        ? menusWithRoles.find((m) => m.id === id)
+        : rolesWithMenus.find((r) => r.id === id);
+    setCurrentItem(item || null);
+  };
+
+  const handleSave = async (data: {
+    menuId?: number;
+    roleId?: number;
+    targetIds: number[];
+  }) => {
+    await updateMenuRoles(data);
+  };
+
+  const toggleViewMode = () => {
+    setViewMode((prev) => (prev === "menus" ? "roles" : "menus"));
+  };
 
   return (
     <div className="p-4 md:p-8">
@@ -28,43 +60,43 @@ export default function MenuRolePage() {
               Menu Role Management
             </h1>
             <p className="text-gray-500 mt-1">
-              Manage menu permissions for roles
+              Manage which{" "}
+              {viewMode === "menus"
+                ? "roles can access menus"
+                : "menus are accessible by roles"}
             </p>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setOpen(true)}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2 px-6 rounded-lg transition-all shadow-md flex items-center gap-2"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Assign Menu to Role
-          </motion.button>
         </div>
 
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
+
         <MenuRoleTable
-          menuRoles={menuRoles}
+          viewMode={viewMode}
+          menus={menusWithRoles}
+          roles={rolesWithMenus}
           loading={loading}
-          onRemove={removeMenuFromRole}
+          onEditMenu={(id) => {
+            setViewMode("menus");
+            handleEdit(id);
+          }}
+          onEditRole={(id) => {
+            setViewMode("roles");
+            handleEdit(id);
+          }}
+          onToggleViewMode={toggleViewMode}
         />
 
         <MenuRoleAssignmentModal
-          open={open}
-          onClose={() => setOpen(false)}
-          onAssign={assignMenuToRole}
-          menus={menus}
-          roles={roles}
+          open={!!currentItem}
+          onClose={() => setCurrentItem(null)}
+          onSave={handleSave}
+          mode={viewMode === "menus" ? "menu" : "role"}
+          currentItem={currentItem}
+          allItems={viewMode === "menus" ? roles : menus}
         />
       </motion.div>
     </div>
