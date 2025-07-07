@@ -1,15 +1,18 @@
-// components/Header.tsx
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiLogOut,
-  FiUser,
   FiClock,
   FiBell,
   FiChevronDown,
   FiAlertTriangle,
   FiMenu,
-  FiSettings,
+  FiCalendar,
+  FiHeart,
+  FiUmbrella,
+  FiLock,
+  FiX,
+  FiCheck,
 } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -21,19 +24,48 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [currentTime, setCurrentTime] = useState("");
+  const [attendanceType, setAttendanceType] = useState<"izin" | "sakit" | null>(
+    null
+  );
+  const [reason, setReason] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [userData, setUserData] = useState({
     fullName: "",
     role: "",
-    avatarColor: "#0f355d", // Default color
+    avatarColor: "#0f355d",
   });
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const options: Intl.DateTimeFormatOptions = {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      };
+      const formattedTime = new Intl.DateTimeFormat("id-ID", options).format(
+        now
+      );
+      setCurrentTime(formattedTime);
+    };
+
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const storedAuth = Cookies.get("authData");
     if (storedAuth) {
       try {
         const parsed = JSON.parse(storedAuth);
-        // Generate a consistent color based on user's name
         const hash =
           parsed.user.fullName
             ?.split("")
@@ -70,24 +102,75 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
     router.push("/login");
   };
 
-  const handleAttendance = (type: "checkin" | "checkout") => {
-    setShowAttendanceModal(false);
-    // Add floating notification
-    const notification = document.createElement("div");
-    notification.className = `fixed top-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50 ${
-      type === "checkin" ? "bg-green-500" : "bg-red-500"
-    } text-white flex items-center gap-2`;
-    notification.innerHTML = `
-      <span>Berhasil ${type === "checkin" ? "Check In" : "Check Out"}!</span>
-    `;
-    document.body.appendChild(notification);
+  const handleAttendanceAction = (
+    type: "checkin" | "checkout" | "izin" | "sakit"
+  ) => {
+    if (type === "izin" || type === "sakit") {
+      setAttendanceType(type);
+      return;
+    }
 
-    // Auto remove after 3 seconds
+    submitAttendance(type);
+  };
+
+  const submitAttendance = (
+    type: "checkin" | "checkout" | "izin" | "sakit",
+    reason?: string
+  ) => {
+    setIsSubmitting(true);
+
+    // Simulate API call
     setTimeout(() => {
-      notification.style.transition = "opacity 0.5s";
-      notification.style.opacity = "0";
-      setTimeout(() => notification.remove(), 500);
-    }, 3000);
+      setShowAttendanceModal(false);
+      setAttendanceType(null);
+      setReason("");
+      setIsSubmitting(false);
+
+      const notification = document.createElement("div");
+      let bgColor = "bg-blue-500";
+      let icon = "";
+      let message = type.charAt(0).toUpperCase() + type.slice(1);
+
+      if (type === "izin" || type === "sakit") {
+        message += ` (${reason})`;
+      }
+
+      switch (type) {
+        case "checkin":
+          bgColor = "bg-green-500";
+          icon = "✓";
+          break;
+        case "checkout":
+          bgColor = "bg-red-500";
+          icon = "✗";
+          break;
+        case "izin":
+          bgColor = "bg-yellow-500";
+          icon = "📝";
+          break;
+        case "sakit":
+          bgColor = "bg-purple-500";
+          icon = "🏥";
+          break;
+      }
+
+      notification.className = `fixed top-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50 ${bgColor} text-white flex items-center gap-2`;
+      notification.innerHTML = `<span>${icon} Berhasil ${message}!</span>`;
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.style.transition = "opacity 0.5s";
+        notification.style.opacity = "0";
+        setTimeout(() => notification.remove(), 500);
+      }, 3000);
+    }, 1000);
+  };
+
+  const handleReasonSubmit = () => {
+    if (!reason.trim()) return;
+    if (attendanceType) {
+      submitAttendance(attendanceType, reason);
+    }
   };
 
   return (
@@ -107,23 +190,48 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
           <FiMenu size={24} />
         </motion.button>
 
-        <motion.div whileHover={{ scale: 1.02 }} className="flex flex-col">
-          <h2 className="text-lg md:text-xl font-semibold text-[#0f355d] flex items-center gap-2">
-            <span>Selamat Datang</span>
-            <motion.span
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-              className="hidden md:inline-block"
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-4">
+            <motion.div whileHover={{ scale: 1.02 }} className="flex flex-col">
+              <h2 className="text-lg md:text-xl font-semibold text-[#0f355d] flex items-center gap-2">
+                <span>Selamat Datang</span>
+                <motion.span
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                  className="hidden md:inline-block"
+                >
+                  👋
+                </motion.span>
+              </h2>
+              <p className="text-xs text-gray-500">Hari yang produktif!</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="hidden md:flex items-center gap-2 bg-gradient-to-r from-[#0f355d]/10 to-[#1a4b7e]/10 px-3 py-1.5 rounded-lg border border-[#0f355d]/20"
             >
-              👋
-            </motion.span>
-          </h2>
-          <p className="text-xs text-gray-500">Hari yang produktif!</p>
-        </motion.div>
+              <FiClock className="text-[#0f355d]" />
+              <div className="text-sm text-[#0f355d] font-medium">
+                {currentTime}
+              </div>
+            </motion.div>
+          </div>
+
+          <motion.div
+            className="md:hidden text-xs text-gray-500 flex items-center gap-1"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            <FiClock size={12} />
+            <span>{currentTime}</span>
+          </motion.div>
+        </div>
       </div>
 
       <div className="flex items-center gap-4 md:gap-6">
-        {/* Attendance Button */}
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -134,7 +242,6 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
           <span className="hidden sm:inline">Absen</span>
         </motion.button>
 
-        {/* Notification Icon */}
         <motion.div
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
@@ -148,7 +255,6 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
           />
         </motion.div>
 
-        {/* User Profile Dropdown */}
         <div className="relative">
           <motion.div
             whileHover={{ scale: 1.02 }}
@@ -174,7 +280,6 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
             </motion.div>
           </motion.div>
 
-          {/* Dropdown Menu */}
           <AnimatePresence>
             {showDropdown && (
               <motion.div
@@ -195,22 +300,6 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
 
                 <motion.button
                   whileHover={{ x: 5, backgroundColor: "rgba(0,0,0,0.05)" }}
-                  className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 border-b border-gray-100"
-                >
-                  <FiUser />
-                  <span>Profil Saya</span>
-                </motion.button>
-
-                <motion.button
-                  whileHover={{ x: 5, backgroundColor: "rgba(0,0,0,0.05)" }}
-                  className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 border-b border-gray-100"
-                >
-                  <FiSettings />
-                  <span>Pengaturan</span>
-                </motion.button>
-
-                <motion.button
-                  whileHover={{ x: 5, backgroundColor: "rgba(0,0,0,0.05)" }}
                   onClick={handleLogoutClick}
                   className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-500"
                 >
@@ -223,7 +312,6 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
         </div>
       </div>
 
-      {/* Attendance Modal */}
       <AnimatePresence>
         {showAttendanceModal && (
           <motion.div
@@ -231,7 +319,10 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 p-4"
-            onClick={() => setShowAttendanceModal(false)}
+            onClick={() => {
+              setAttendanceType(null);
+              setShowAttendanceModal(false);
+            }}
           >
             <motion.div
               initial={{ scale: 0.9, y: 20 }}
@@ -240,49 +331,160 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
               className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-xl font-bold text-[#0f355d] mb-4 flex items-center gap-2">
-                <FiClock className="text-[#0f355d]" />
-                <span>Presensi Karyawan</span>
-              </h3>
+              {!attendanceType ? (
+                <>
+                  <h3 className="text-xl font-bold text-[#0f355d] mb-4 flex items-center gap-2">
+                    <FiClock className="text-[#0f355d]" />
+                    <span>Presensi Karyawan</span>
+                  </h3>
 
-              <div className="flex flex-col gap-3 mb-4">
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => handleAttendance("checkin")}
-                  className="bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 shadow-md"
-                >
-                  <FiClock />
-                  Check In
-                </motion.button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => handleAttendanceAction("checkin")}
+                      className="bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-lg font-medium flex flex-col items-center justify-center gap-2 shadow-md"
+                    >
+                      <FiClock size={20} />
+                      <span>Check In</span>
+                    </motion.button>
 
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => handleAttendance("checkout")}
-                  className="bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 shadow-md"
-                >
-                  <FiClock />
-                  Check Out
-                </motion.button>
-              </div>
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => handleAttendanceAction("checkout")}
+                      className="bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-lg font-medium flex flex-col items-center justify-center gap-2 shadow-md"
+                    >
+                      <FiClock size={20} />
+                      <span>Check Out</span>
+                    </motion.button>
 
-              <div className="text-center">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowAttendanceModal(false)}
-                  className="text-gray-500 hover:text-gray-700 text-sm px-4 py-1.5 rounded-lg hover:bg-gray-100"
-                >
-                  Tutup
-                </motion.button>
-              </div>
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => handleAttendanceAction("izin")}
+                      className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white py-3 rounded-lg font-medium flex flex-col items-center justify-center gap-2 shadow-md"
+                    >
+                      <FiCalendar size={20} />
+                      <span>Izin</span>
+                    </motion.button>
+
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => handleAttendanceAction("sakit")}
+                      className="bg-gradient-to-r from-purple-500 to-purple-600 text-white py-3 rounded-lg font-medium flex flex-col items-center justify-center gap-2 shadow-md"
+                    >
+                      <FiHeart size={20} />
+                      <span>Sakit</span>
+                    </motion.button>
+
+                    <motion.div className="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-500 py-3 rounded-lg font-medium flex flex-col items-center justify-center gap-2 shadow-md cursor-not-allowed relative col-span-2">
+                      <div className="absolute top-2 right-2 bg-gray-100 rounded-full p-1">
+                        <FiLock size={12} className="text-gray-500" />
+                      </div>
+                      <FiUmbrella size={20} />
+                      <span>Cuti (Segera Hadir)</span>
+                      <span className="text-xs">Fitur dalam pengembangan</span>
+                    </motion.div>
+                  </div>
+
+                  <div className="text-center">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowAttendanceModal(false)}
+                      className="text-gray-500 hover:text-gray-700 text-sm px-4 py-1.5 rounded-lg hover:bg-gray-100"
+                    >
+                      Tutup
+                    </motion.button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-[#0f355d] flex items-center gap-2">
+                      {attendanceType === "izin" ? (
+                        <>
+                          <FiCalendar className="text-yellow-500" />
+                          <span>Form Izin</span>
+                        </>
+                      ) : (
+                        <>
+                          <FiHeart className="text-purple-500" />
+                          <span>Form Sakit</span>
+                        </>
+                      )}
+                    </h3>
+                    <button
+                      onClick={() => setAttendanceType(null)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <FiX size={20} />
+                    </button>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Alasan {attendanceType === "izin" ? "Izin" : "Sakit"}
+                    </label>
+                    <textarea
+                      value={reason}
+                      onChange={(e) => setReason(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0f355d]"
+                      rows={3}
+                      placeholder={`Masukkan alasan ${
+                        attendanceType === "izin" ? "izin" : "sakit"
+                      } Anda`}
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-3">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setAttendanceType(null)}
+                      className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    >
+                      Batal
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleReasonSubmit}
+                      disabled={!reason.trim() || isSubmitting}
+                      className={`px-4 py-2 text-sm text-white rounded-lg flex items-center gap-2 ${
+                        attendanceType === "izin"
+                          ? "bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700"
+                          : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
+                      } disabled:opacity-70`}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <motion.span
+                            animate={{ rotate: 360 }}
+                            transition={{ repeat: Infinity, duration: 1 }}
+                            className="inline-block"
+                          >
+                            ↻
+                          </motion.span>
+                          Mengirim...
+                        </>
+                      ) : (
+                        <>
+                          <FiCheck />
+                          Submit
+                        </>
+                      )}
+                    </motion.button>
+                  </div>
+                </>
+              )}
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Logout Confirmation Modal */}
       <AnimatePresence>
         {showLogoutConfirm && (
           <motion.div
