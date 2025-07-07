@@ -29,8 +29,9 @@ export const login = async (
   username: string,
   password: string
 ): Promise<LoginResponse> => {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
   try {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const response = await fetch(`${API_URL}/api/auth/login`, {
       method: "POST",
       headers: {
@@ -39,17 +40,27 @@ export const login = async (
       body: JSON.stringify({ username, password }),
     });
 
+    const data = await response.json();
+
+    // Jika response bukan 2xx, tetap kembalikan LoginResponse dengan kode yang sesuai
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Login gagal");
+      return {
+        code: response.status,
+        message: data?.message || "Login gagal",
+      };
     }
 
-    return response.json();
+    return {
+      code: 200,
+      message: data?.message || "Login berhasil",
+      data: data?.data,
+    };
   } catch (error) {
-    console.error("Error API:", error);
-    throw new Error(
-      "Gagal terhubung ke server. Silakan coba lagi beberapa saat."
-    );
+    console.error("Login error:", error);
+    return {
+      code: 0,
+      message: "Gagal terhubung ke server. Silakan coba lagi beberapa saat.",
+    };
   }
 };
 

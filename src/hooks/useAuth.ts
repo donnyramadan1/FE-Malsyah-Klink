@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -19,11 +20,12 @@ export const useAuth = () => {
     try {
       const response = await login(username, password);
 
+      // Tangani response bukan 200
       if (response.code !== 200 || !response.data) {
         throw new Error(response.message || "Login gagal");
       }
 
-      // Simpan data
+      // Simpan ke context dan localStorage
       contextLogin(response.data.token, response.data.user);
       localStorage.setItem("authToken", response.data.token);
       localStorage.setItem(
@@ -35,10 +37,8 @@ export const useAuth = () => {
         })
       );
 
-      // Tampilkan indikator sukses
       setIsSuccess(true);
 
-      // Trigger animasi
       const loginContainer = document.getElementById("login-container");
       if (loginContainer) {
         loginContainer.classList.add(
@@ -46,21 +46,31 @@ export const useAuth = () => {
           "transition-opacity",
           "duration-500"
         );
-
-        // Redirect setelah animasi selesai
         setTimeout(() => {
           router.push("/dashboard");
-        }, 500); // Sesuaikan dengan durasi animasi
+        }, 500);
       } else {
-        // Fallback jika element tidak ditemukan
         router.push("/dashboard");
       }
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Login gagal. Silakan coba lagi nanti."
-      );
+    } catch (err: any) {
+      if (err.response) {
+        // Error dari server (dengan response)
+        const message =
+          err.response?.data?.message ||
+          "Login gagal. Silakan cek kembali data Anda.";
+        setError(message);
+      } else if (err.request) {
+        // Request dikirim tapi tidak ada response (server down, timeout, dsb)
+        setError(
+          "Tidak dapat terhubung ke server. Silakan coba beberapa saat lagi."
+        );
+      } else {
+        // Error lainnya (coding error, kesalahan penanganan)
+        setError(
+          err.message || "Terjadi kesalahan tak terduga. Silakan coba lagi."
+        );
+      }
+
       setIsSuccess(false);
     } finally {
       setIsLoading(false);
