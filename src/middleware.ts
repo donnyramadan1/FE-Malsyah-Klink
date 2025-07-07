@@ -6,6 +6,11 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("authToken")?.value;
   const pathname = request.nextUrl.pathname;
 
+  // Skip middleware untuk route not-found
+  if (pathname === "/not-found") {
+    return NextResponse.next();
+  }
+
   const isLogin = pathname.startsWith("/login");
   const isProtected = [
     "/dashboard",

@@ -4,6 +4,7 @@ import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiMenu, FiX } from "react-icons/fi";
+import { RouteGuard } from "@/components/RouteGuard";
 
 export default function ProtectedLayout({ children }: { children: ReactNode }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -52,7 +53,7 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
           transition={{ delay: 0.2 }}
           className="flex-1 overflow-y-auto p-4 md:p-6"
         >
-          {children}
+          <RouteGuard>{children}</RouteGuard>
         </motion.main>
       </div>
 
