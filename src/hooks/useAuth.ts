@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/services/auth.service";
 import { useAuthContext } from "@/context/AuthContext";
+import { setCookie } from "cookies-next";
 
 export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -20,23 +21,21 @@ export const useAuth = () => {
     try {
       const response = await login(username, password);
 
-      // Tangani response bukan 200
       if (response.code !== 200 || !response.data) {
         throw new Error(response.message || "Login gagal");
       }
 
-      // Simpan ke context dan localStorage
+      // Simpan ke context dan cookie (di dalam AuthContext)
       contextLogin(response.data.token, response.data.user);
-      localStorage.setItem("authToken", response.data.token);
-      localStorage.setItem(
-        "authData",
-        JSON.stringify({
-          user: response.data.user,
-          roles: response.data.roles,
-          menus: response.data.menus,
-        })
-      );
 
+      setCookie("authData", JSON.stringify({
+            user: response.data.user,
+            roles: response.data.roles,
+            menus: response.data.menus,
+          }), {
+            maxAge: 60 * 60 * 24, // 1 hari
+            path: "/"
+          });      
       setIsSuccess(true);
 
       const loginContainer = document.getElementById("login-container");
@@ -53,35 +52,19 @@ export const useAuth = () => {
         router.push("/dashboard");
       }
     } catch (err: any) {
-      if (err.response) {
-        // Error dari server (dengan response)
-        const message =
-          err.response?.data?.message ||
-          "Login gagal. Silakan cek kembali data Anda.";
-        setError(message);
-      } else if (err.request) {
-        // Request dikirim tapi tidak ada response (server down, timeout, dsb)
-        setError(
-          "Tidak dapat terhubung ke server. Silakan coba beberapa saat lagi."
-        );
-      } else {
-        // Error lainnya (coding error, kesalahan penanganan)
-        setError(
-          err.message || "Terjadi kesalahan tak terduga. Silakan coba lagi."
-        );
-      }
-
-      setIsSuccess(false);
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Terjadi kesalahan login";
+      setError(message);
     } finally {
       setIsLoading(false);
     }
   };
 
   const isAuthenticated = () => {
-    if (typeof window === "undefined") return false;
-    const token = localStorage.getItem("authToken");
-    const authData = localStorage.getItem("authData");
-    return !!token && !!authData;
+    // cukup rely on context
+    return !!contextLogin;
   };
 
   return { handleLogin, isLoading, error, isSuccess, isAuthenticated };

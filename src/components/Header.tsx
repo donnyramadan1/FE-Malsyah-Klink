@@ -1,4 +1,3 @@
-// components/Header.tsx
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -12,23 +11,23 @@ import {
   FiSettings,
 } from "react-icons/fi";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useAuthContext } from "@/context/AuthContext";
 
 export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
-  const router = useRouter();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { logout } = useAuthContext();
 
   const [userData, setUserData] = useState({
     fullName: "",
     role: "",
-    avatarColor: "#0f355d", // Default color
+    avatarColor: "#0f355d",
   });
 
   useEffect(() => {
-    const storedAuth = localStorage.getItem("authData");
+   const storedAuth = localStorage.getItem("authData");
     if (storedAuth) {
       try {
         const parsed = JSON.parse(storedAuth);
@@ -55,7 +54,6 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
   const toggleDropdown = () => setShowDropdown(!showDropdown);
   const toggleAttendanceModal = () =>
     setShowAttendanceModal(!showAttendanceModal);
-
   const handleLogoutClick = () => {
     setShowDropdown(false);
     setShowLogoutConfirm(true);
@@ -63,25 +61,20 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("authData");
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    router.push("/login");
+    logout(); // dari context, otomatis hapus cookie dan redirect
   };
 
   const handleAttendance = (type: "checkin" | "checkout") => {
     setShowAttendanceModal(false);
-    // Add floating notification
     const notification = document.createElement("div");
     notification.className = `fixed top-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50 ${
       type === "checkin" ? "bg-green-500" : "bg-red-500"
     } text-white flex items-center gap-2`;
-    notification.innerHTML = `
-      <span>Berhasil ${type === "checkin" ? "Check In" : "Check Out"}!</span>
-    `;
+    notification.innerHTML = `<span>Berhasil ${
+      type === "checkin" ? "Check In" : "Check Out"
+    }!</span>`;
     document.body.appendChild(notification);
-
-    // Auto remove after 3 seconds
     setTimeout(() => {
       notification.style.transition = "opacity 0.5s";
       notification.style.opacity = "0";
@@ -122,7 +115,6 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
       </div>
 
       <div className="flex items-center gap-4 md:gap-6">
-        {/* Attendance Button */}
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -133,7 +125,6 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
           <span className="hidden sm:inline">Absen</span>
         </motion.button>
 
-        {/* Notification Icon */}
         <motion.div
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
@@ -147,7 +138,6 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
           />
         </motion.div>
 
-        {/* User Profile Dropdown */}
         <div className="relative">
           <motion.div
             whileHover={{ scale: 1.02 }}
@@ -173,7 +163,6 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
             </motion.div>
           </motion.div>
 
-          {/* Dropdown Menu */}
           <AnimatePresence>
             {showDropdown && (
               <motion.div

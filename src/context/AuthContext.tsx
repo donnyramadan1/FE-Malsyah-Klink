@@ -7,6 +7,7 @@ import {
   useEffect,
 } from "react";
 import { useRouter } from "next/navigation";
+import { getCookie, setCookie, deleteCookie } from "cookies-next";
 
 interface User {
   id: number;
@@ -31,18 +32,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("authToken");
-    const storedUser = localStorage.getItem("authData");
+    const storedToken = getCookie("token")?.toString() || null;
+    const storedAuthData = getCookie("authData");
 
-    if (storedToken && storedUser) {
+    if (storedToken && storedAuthData) {
       try {
-        const parsedUser = JSON.parse(storedUser).user;
+        const parsed = JSON.parse(storedAuthData.toString());
         setToken(storedToken);
-        setUser(parsedUser);
+        setUser(parsed.user);
       } catch (error) {
-        console.error("Gagal memparse data user:", error);
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("authData");
+        console.error("Gagal memparse authData dari cookie:", error);
+        deleteCookie("token");
+        deleteCookie("authData");
       }
     }
   }, []);
@@ -50,14 +51,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = (newToken: string, newUser: User) => {
     setToken(newToken);
     setUser(newUser);
-    localStorage.setItem("authToken", newToken);
+    setCookie("token", newToken, { maxAge: 60 * 60 * 24, path: "/" });
     localStorage.setItem("authData", JSON.stringify({ user: newUser }));
   };
 
   const logout = () => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem("authToken");
+    deleteCookie("token");
     localStorage.removeItem("authData");
     router.push("/login");
   };
@@ -77,7 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuthContext = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAuthContext harus digunakan dalam AuthProvider");
   }
   return context;
