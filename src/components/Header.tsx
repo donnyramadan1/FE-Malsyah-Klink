@@ -13,6 +13,7 @@ import {
 } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 
 export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
   });
 
   useEffect(() => {
-    const storedAuth = localStorage.getItem("authData");
+    const storedAuth = Cookies.get("authData");
     if (storedAuth) {
       try {
         const parsed = JSON.parse(storedAuth);
@@ -63,8 +64,8 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("authData");
+    Cookies.remove("authToken");
+    Cookies.remove("authData");
     await new Promise((resolve) => setTimeout(resolve, 1000));
     router.push("/login");
   };

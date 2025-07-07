@@ -1,7 +1,9 @@
+import Cookies from "js-cookie";
+
 export const getAuthData = () => {
   if (typeof window === "undefined") return null;
 
-  const storedAuth = localStorage.getItem("authData");
+  const storedAuth = Cookies.get("authData");
   if (!storedAuth) return null;
 
   try {
@@ -19,5 +21,5 @@ export const getAuthMenus = () => {
 
 export const getAuthToken = () => {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("authToken");
+  return Cookies.get("authToken");
 };

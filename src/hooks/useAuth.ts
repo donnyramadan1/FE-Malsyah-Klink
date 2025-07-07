@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/services/auth.service";
 import { useAuthContext } from "@/context/AuthContext";
+import Cookies from "js-cookie";
 
 export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -20,21 +21,25 @@ export const useAuth = () => {
     try {
       const response = await login(username, password);
 
-      // Tangani response bukan 200
       if (response.code !== 200 || !response.data) {
         throw new Error(response.message || "Login gagal");
       }
 
-      // Simpan ke context dan localStorage
+      // Simpan ke context dan cookies
       contextLogin(response.data.token, response.data.user);
-      localStorage.setItem("authToken", response.data.token);
-      localStorage.setItem(
+      Cookies.set("authToken", response.data.token, {
+        expires: 1,
+        secure: true,
+        sameSite: "strict",
+      });
+      Cookies.set(
         "authData",
         JSON.stringify({
           user: response.data.user,
           roles: response.data.roles,
           menus: response.data.menus,
-        })
+        }),
+        { expires: 1, secure: true, sameSite: "strict" }
       );
 
       setIsSuccess(true);
@@ -54,18 +59,15 @@ export const useAuth = () => {
       }
     } catch (err: any) {
       if (err.response) {
-        // Error dari server (dengan response)
         const message =
           err.response?.data?.message ||
           "Login gagal. Silakan cek kembali data Anda.";
         setError(message);
       } else if (err.request) {
-        // Request dikirim tapi tidak ada response (server down, timeout, dsb)
         setError(
           "Tidak dapat terhubung ke server. Silakan coba beberapa saat lagi."
         );
       } else {
-        // Error lainnya (coding error, kesalahan penanganan)
         setError(
           err.message || "Terjadi kesalahan tak terduga. Silakan coba lagi."
         );
@@ -79,8 +81,8 @@ export const useAuth = () => {
 
   const isAuthenticated = () => {
     if (typeof window === "undefined") return false;
-    const token = localStorage.getItem("authToken");
-    const authData = localStorage.getItem("authData");
+    const token = Cookies.get("authToken");
+    const authData = Cookies.get("authData");
     return !!token && !!authData;
   };
 

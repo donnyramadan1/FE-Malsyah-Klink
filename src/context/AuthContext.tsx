@@ -7,6 +7,7 @@ import {
   useEffect,
 } from "react";
 import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 
 interface User {
   id: number;
@@ -31,8 +32,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("authToken");
-    const storedUser = localStorage.getItem("authData");
+    const storedToken = Cookies.get("authToken");
+    const storedUser = Cookies.get("authData");
 
     if (storedToken && storedUser) {
       try {
@@ -41,8 +42,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(parsedUser);
       } catch (error) {
         console.error("Gagal memparse data user:", error);
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("authData");
+        Cookies.remove("authToken");
+        Cookies.remove("authData");
       }
     }
   }, []);
@@ -50,15 +51,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = (newToken: string, newUser: User) => {
     setToken(newToken);
     setUser(newUser);
-    localStorage.setItem("authToken", newToken);
-    localStorage.setItem("authData", JSON.stringify({ user: newUser }));
+    // Set cookie dengan expiry 1 hari
+    Cookies.set("authToken", newToken, {
+      expires: 1,
+      secure: true,
+      sameSite: "strict",
+    });
+    Cookies.set("authData", JSON.stringify({ user: newUser }), {
+      expires: 1,
+      secure: true,
+      sameSite: "strict",
+    });
   };
 
   const logout = () => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("authData");
+    Cookies.remove("authToken");
+    Cookies.remove("authData");
     router.push("/login");
   };
 
