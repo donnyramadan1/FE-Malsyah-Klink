@@ -4,16 +4,9 @@ import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiMenu, FiX } from "react-icons/fi";
-import { useAuth } from "@/hooks/useAuth";
-import { redirect } from "next/navigation";
 
 export default function ProtectedLayout({ children }: { children: ReactNode }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
-
-  if (!isAuthenticated()) {
-    redirect("/login");
-  }
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
