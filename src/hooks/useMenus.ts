@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import { MenuDto, CreateMenuDto, UpdateMenuDto } from "@/types/menu";

@@ -7,9 +7,31 @@ import { CreateUserDto, UpdateUserDto, UserDto } from "@/types/user";
 import { motion } from "framer-motion";
 
 export default function UserPage() {
-  const { users, loading, createUser, updateUser, deleteUser } = useUsers();
+  const {
+    users,
+    loading,
+    currentPage,
+    totalItems,
+    pageSize,
+    fetchUsers,
+    createUser,
+    updateUser,
+    deleteUser,
+    setCurrentPage,
+    searchTerm,
+    handleSearch,
+    sortField,
+    sortDirection,
+    handleSort,
+  } = useUsers();
+
   const [selectedUser, setSelectedUser] = useState<UserDto | null>(null);
   const [open, setOpen] = useState(false);
+
+  const handlePageChange = async (page: number) => {
+    setCurrentPage(page);
+    await fetchUsers(page);
+  };
 
   return (
     <div className="p-4 md:p-8">
@@ -59,6 +81,15 @@ export default function UserPage() {
             setOpen(true);
           }}
           onDelete={deleteUser}
+          currentPage={currentPage}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={handlePageChange}
+          searchTerm={searchTerm}
+          onSearch={handleSearch}
+          sortField={sortField}
+          sortDirection={sortDirection}
+          onSort={handleSort}
         />
 
         <UserModal
