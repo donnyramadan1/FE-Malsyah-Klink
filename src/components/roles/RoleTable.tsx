@@ -7,9 +7,9 @@ import {
   FiChevronDown,
   FiSearch,
 } from "react-icons/fi";
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { ConfirmDialog } from "../ConfirmDialog";
+import { useState } from "react";
 
 type SortDirection = "asc" | "desc";
 type SortableField = keyof Pick<RoleDto, "name" | "createdAt">;
@@ -19,51 +19,49 @@ interface Props {
   loading: boolean;
   onEdit: (role: RoleDto) => void;
   onDelete: (id: number) => void;
+  currentPage: number;
+  totalItems: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  searchTerm: string;
+  onSearch: (term: string) => void;
+  sortField: SortableField;
+  sortDirection: SortDirection;
+  onSort: (field: SortableField, direction: SortDirection) => void;
 }
 
-export default function RoleTable({ roles, loading, onEdit, onDelete }: Props) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortField, setSortField] = useState<SortableField>("name");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+export default function RoleTable({
+  roles,
+  loading,
+  onEdit,
+  onDelete,
+  currentPage,
+  pageSize,
+  totalItems,
+  onPageChange,
+  searchTerm,
+  onSearch,
+  sortField,
+  sortDirection,
+  onSort,
+}: Props) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState<number | null>(null);
 
-  // Filter roles based on search term
-  const filteredRoles = roles.filter((role) =>
-    Object.values(role).some((value) =>
-      value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
-
-  // Sort roles based on selected field and direction
-  const sortedRoles = [...filteredRoles].sort((a, b) => {
-    const aValue = a[sortField];
-    const bValue = b[sortField];
-
-    if (aValue === bValue) return 0;
-
-    const direction = sortDirection === "asc" ? 1 : -1;
-
-    return aValue > bValue ? direction : -direction;
-  });
-
-  const handleSort = (field: SortableField) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
-    }
+  const handleSortClick = (field: SortableField) => {
+    const direction =
+      sortField === field && sortDirection === "asc" ? "desc" : "asc";
+    onSort(field, direction);
   };
 
-  const SortIcon = ({ field }: { field: SortableField }) =>
-    sortField === field ? (
-      sortDirection === "asc" ? (
-        <FiChevronUp className="inline ml-1" />
-      ) : (
-        <FiChevronDown className="inline ml-1" />
-      )
-    ) : null;
+  const SortIcon = ({ field }: { field: SortableField }) => {
+    if (sortField !== field) return null;
+    return sortDirection === "asc" ? (
+      <FiChevronUp className="inline ml-1" />
+    ) : (
+      <FiChevronDown className="inline ml-1" />
+    );
+  };
 
   const handleDeleteClick = (id: number) => {
     setRoleToDelete(id);
@@ -98,7 +96,12 @@ export default function RoleTable({ roles, loading, onEdit, onDelete }: Props) {
             placeholder="Search roles..."
             className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => onSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                onSearch(e.currentTarget.value);
+              }
+            }}
           />
         </div>
       </div>
@@ -110,7 +113,7 @@ export default function RoleTable({ roles, loading, onEdit, onDelete }: Props) {
             <tr>
               <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort("name")}
+                onClick={() => handleSortClick("name")}
               >
                 <div className="flex items-center">
                   Role Name
@@ -122,7 +125,7 @@ export default function RoleTable({ roles, loading, onEdit, onDelete }: Props) {
               </th>
               <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort("createdAt")}
+                onClick={() => handleSortClick("createdAt")}
               >
                 <div className="flex items-center">
                   Created At
@@ -135,8 +138,8 @@ export default function RoleTable({ roles, loading, onEdit, onDelete }: Props) {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {sortedRoles.length > 0 ? (
-              sortedRoles.map((role, index) => (
+            {roles.length > 0 ? (
+              roles.map((role, index) => (
                 <motion.tr
                   key={role.id}
                   initial={{ opacity: 0 }}
@@ -193,6 +196,28 @@ export default function RoleTable({ roles, loading, onEdit, onDelete }: Props) {
             )}
           </tbody>
         </table>
+        <div className="flex justify-between items-center p-4 border-t">
+          <div className="text-sm text-gray-600">
+            Showing {(currentPage - 1) * pageSize + 1} -{" "}
+            {Math.min(currentPage * pageSize, totalItems)} of {totalItems}
+          </div>
+          <div className="space-x-2">
+            <button
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage * pageSize >= totalItems}
+              className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Confirmation Dialog */}

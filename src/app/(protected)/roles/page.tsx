@@ -1,4 +1,3 @@
-// src/app/(protected)/roles/page.tsx
 "use client";
 import { useRoles } from "@/hooks/useRoles";
 import RoleTable from "@/components/roles/RoleTable";
@@ -8,9 +7,31 @@ import { CreateRoleDto, UpdateRoleDto, RoleDto } from "@/types/role";
 import { motion } from "framer-motion";
 
 export default function RolePage() {
-  const { roles, loading, createRole, updateRole, deleteRole } = useRoles();
+  const {
+    roles,
+    loading,
+    currentPage,
+    totalItems,
+    pageSize,
+    fetchRoles,
+    createRole,
+    updateRole,
+    deleteRole,
+    setCurrentPage,
+    searchTerm,
+    handleSearch,
+    sortField,
+    sortDirection,
+    handleSort,
+  } = useRoles();
+
   const [selectedRole, setSelectedRole] = useState<RoleDto | null>(null);
   const [open, setOpen] = useState(false);
+
+  const handlePageChange = async (page: number) => {
+    setCurrentPage(page);
+    await fetchRoles(page);
+  };
 
   return (
     <div className="p-4 md:p-8">
@@ -62,6 +83,15 @@ export default function RolePage() {
             setOpen(true);
           }}
           onDelete={deleteRole}
+          currentPage={currentPage}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={handlePageChange}
+          searchTerm={searchTerm}
+          onSearch={handleSearch}
+          sortField={sortField}
+          sortDirection={sortDirection}
+          onSort={handleSort}
         />
 
         <RoleModal
