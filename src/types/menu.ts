@@ -1,3 +1,5 @@
+import { RoleDto } from "./role";
+
 export interface BaseMenuForm {
   title: string;
   icon: string;
@@ -16,6 +18,7 @@ export interface MenuDto {
   createdAt: string;
   updatedAt: string;
   children?: MenuDto[];
+  roles?: RoleDto[]
 }
 
 export interface CreateMenuDto extends BaseMenuForm {
