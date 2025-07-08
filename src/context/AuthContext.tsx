@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const storedToken = Cookies.get("authToken");
-    const storedUser = Cookies.get("authData");
+    const storedUser = Cookies.get("authUser");
 
     if (storedToken && storedUser) {
       try {
@@ -43,7 +43,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } catch (error) {
         console.error("Gagal memparse data user:", error);
         Cookies.remove("authToken");
-        Cookies.remove("authData");
+        Cookies.remove("authUser");
+        Cookies.remove("authRoles");
+        Cookies.remove("authMenus");
       }
     }
   }, []);
@@ -57,7 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       secure: true,
       sameSite: "strict",
     });
-    Cookies.set("authData", JSON.stringify({ user: newUser }), {
+    Cookies.set("authUser", JSON.stringify({ user: newUser }), {
       expires: 1,
       secure: true,
       sameSite: "strict",
@@ -68,7 +70,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(null);
     setUser(null);
     Cookies.remove("authToken");
-    Cookies.remove("authData");
+    Cookies.remove("authUser");
+    Cookies.remove("authRoles");
+    Cookies.remove("authMenus");
     router.push("/login");
   };
 

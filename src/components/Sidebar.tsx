@@ -17,17 +17,18 @@ import {
   FiBarChart2,
   FiHeart,
   FiDatabase,
+  FiChevronRight,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { getAuthMenus } from "@/utils/auth.utils"; // tambahkan ini
+import { getAuthMenus } from "@/utils/auth.utils";
 
 interface MenuItem {
   id: number;
   parentId: number | null;
   title: string;
-  icon: string; // asumsi ini berupa nama icon string, contoh: "FiUser"
+  icon: string;
   path: string;
   orderNum: number;
   isActive: boolean;
@@ -61,23 +62,25 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
 
   useEffect(() => {
     const menus = getAuthMenus();
-
-    // Strukturkan menjadi nested subItems berdasarkan parentId
     const parentMenus = menus.filter((m: MenuItem) => m.parentId === null);
     const structured = parentMenus.map((parent: MenuItem) => ({
       ...parent,
       icon: parent.icon,
       subItems: menus.filter((m: MenuItem) => m.parentId === parent.id),
     }));
-
     setMenuItems(structured);
   }, []);
 
-  const toggleSubMenu = (itemName: string) => {
+  const toggleSubMenu = (itemName: string, e: React.MouseEvent) => {
+    e.preventDefault();
     setExpandedItems((prev) => ({
       ...prev,
       [itemName]: !prev[itemName],
     }));
+  };
+
+  const isActivePath = (path: string) => {
+    return pathname === path || (path !== "/" && pathname.startsWith(path));
   };
 
   return (
@@ -110,25 +113,29 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
             <motion.div whileHover={{ scale: 1.01 }}>
               <Link
                 href={item.path}
-                onClick={onClose}
+                onClick={(e) => {
+                  if (item.subItems?.length) {
+                    toggleSubMenu(item.title, e);
+                  } else {
+                    onClose?.();
+                  }
+                }}
                 className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-all ${
-                  pathname === item.path
+                  isActivePath(item.path)
                     ? "bg-white text-[#0f355d] font-medium shadow-md"
                     : "hover:bg-white/10 hover:text-blue-100"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  {iconMap[item.icon] ?? <FiUser />}
+                  {iconMap[item.icon] ?? ""}
                   {item.title}
                 </div>
                 {item.subItems && item.subItems.length > 0 && (
                   <motion.div
                     animate={{ rotate: expandedItems[item.title] ? 90 : 0 }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      toggleSubMenu(item.title);
-                    }}
-                  ></motion.div>
+                  >
+                    <FiChevronRight className="text-sm" />
+                  </motion.div>
                 )}
               </Link>
             </motion.div>
@@ -153,12 +160,12 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
                           href={subItem.path}
                           onClick={onClose}
                           className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all ${
-                            pathname === subItem.path
+                            isActivePath(subItem.path)
                               ? "bg-white/20 text-white font-medium"
                               : "hover:bg-white/5 hover:text-blue-100"
                           }`}
                         >
-                          {iconMap[item.icon] ?? <FiUser className="text-lg" />}
+                          {iconMap[subItem.icon] ?? ""}
                           {subItem.title}
                         </Link>
                       </motion.div>
@@ -170,25 +177,6 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
           </div>
         ))}
       </nav>
-
-      <div className="p-4 border-t border-white/10 space-y-2">
-        <motion.div
-          whileHover={{ x: 5 }}
-          whileTap={{ scale: 0.98 }}
-          className="flex items-center gap-3 px-4 py-2 rounded-lg text-sm hover:bg-white/5 hover:text-white cursor-pointer"
-        >
-          <FiSettings />
-          <span>Pengaturan Akun</span>
-        </motion.div>
-        <motion.div
-          whileHover={{ x: 5 }}
-          whileTap={{ scale: 0.98 }}
-          className="flex items-center gap-3 px-4 py-2 rounded-lg text-sm hover:bg-white/5 hover:text-white cursor-pointer"
-        >
-          <FiLogOut />
-          <span>Keluar</span>
-        </motion.div>
-      </div>
     </motion.aside>
   );
 };

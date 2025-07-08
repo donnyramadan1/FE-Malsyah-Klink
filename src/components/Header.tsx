@@ -62,12 +62,18 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
   }, []);
 
   useEffect(() => {
-    const storedAuth = Cookies.get("authData");
-    if (storedAuth) {
+    const storedUser = Cookies.get("authUser");
+    const storedRole = Cookies.get("authRoles");
+    if (storedUser) {
       try {
-        const parsed = JSON.parse(storedAuth);
+        const parsed = JSON.parse(storedUser);
+        let roleName = "";
+        if (storedRole) {
+          const parsedRoles = JSON.parse(storedRole);
+          roleName = parsedRoles[0].name
+        }
         const hash =
-          parsed.user.fullName
+          parsed?.fullName
             ?.split("")
             .reduce((acc: number, char: string) => {
               return char.charCodeAt(0) + ((acc << 5) - acc);
@@ -75,8 +81,8 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
         const color = `hsl(${Math.abs(hash) % 360}, 70%, 45%)`;
 
         setUserData({
-          fullName: parsed.user.fullName || "Pengguna",
-          role: parsed.roles.name || "Karyawan",
+          fullName: parsed?.fullName || "Pengguna",
+          role: roleName || "Karyawan",
           avatarColor: color,
         });
       } catch (err) {
@@ -97,7 +103,9 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     Cookies.remove("authToken");
-    Cookies.remove("authData");
+    Cookies.remove("authUser");      
+    Cookies.remove("authRoles");
+    Cookies.remove("authMenus");
     await new Promise((resolve) => setTimeout(resolve, 1000));
     router.push("/login");
   };

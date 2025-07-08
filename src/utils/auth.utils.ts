@@ -3,7 +3,7 @@ import Cookies from "js-cookie";
 export const getAuthData = () => {
   if (typeof window === "undefined") return null;
 
-  const storedAuth = Cookies.get("authData");
+  const storedAuth = Cookies.get("authMenus");
   if (!storedAuth) return null;
 
   try {
@@ -16,7 +16,7 @@ export const getAuthData = () => {
 
 export const getAuthMenus = () => {
   const authData = getAuthData();
-  return authData?.menus || [];
+  return authData || [];
 };
 
 export const getAuthToken = () => {

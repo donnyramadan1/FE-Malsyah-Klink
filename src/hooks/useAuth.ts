@@ -24,23 +24,31 @@ export const useAuth = () => {
       if (response.code !== 200 || !response.data) {
         throw new Error(response.message || "Login gagal");
       }
-
       // Simpan ke context dan cookies
       contextLogin(response.data.token, response.data.user);
       Cookies.set("authToken", response.data.token, {
         expires: 1,
         secure: true,
         sameSite: "strict",
+      });      
+
+      Cookies.set("authUser", JSON.stringify(response.data.user), {
+        expires: 1,
+        secure: true,
+        sameSite: "strict",
       });
-      Cookies.set(
-        "authData",
-        JSON.stringify({
-          user: response.data.user,
-          roles: response.data.roles,
-          menus: response.data.menus,
-        }),
-        { expires: 1, secure: true, sameSite: "strict" }
-      );
+
+      Cookies.set("authRoles", JSON.stringify(response.data.roles), {
+        expires: 1,
+        secure: true,
+        sameSite: "strict",
+      });
+
+      Cookies.set("authMenus", JSON.stringify(response.data.menus), {
+        expires: 1,
+        secure: true,
+        sameSite: "strict",
+      });
 
       setIsSuccess(true);
 
@@ -82,7 +90,7 @@ export const useAuth = () => {
   const isAuthenticated = () => {
     if (typeof window === "undefined") return false;
     const token = Cookies.get("authToken");
-    const authData = Cookies.get("authData");
+    const authData = Cookies.get("authUser");
     return !!token && !!authData;
   };
 

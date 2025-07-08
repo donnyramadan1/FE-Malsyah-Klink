@@ -10,9 +10,9 @@ export const RouteGuard = ({ children }: { children: React.ReactNode }) => {
   const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const authDataStr = Cookies.get("authData");
+    const authDataStr = Cookies.get("authMenus");
 
-    // Jika tidak ada authData, redirect ke login
+    // Jika tidak ada authMenus, redirect ke login
     if (!authDataStr) {
       router.push("/login");
       return;
@@ -21,7 +21,7 @@ export const RouteGuard = ({ children }: { children: React.ReactNode }) => {
     try {
       const authData = JSON.parse(authDataStr);
       const allowedPaths: string[] =
-        authData.menus?.map((m: any) => m.path) || [];
+        authData?.map((m: any) => m.path) || [];
 
       // Jika path saat ini adalah /not-found, biarkan render
       if (pathname === "/not-found") {
