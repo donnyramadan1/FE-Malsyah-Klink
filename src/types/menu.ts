@@ -26,3 +26,10 @@ export interface UpdateMenuDto extends BaseMenuForm {
   parentId?: number | null;
   isActive: boolean;
 }
+
+export interface PagedResult<T> {
+  items: T[];
+  totalItems: number;
+  page: number;
+  pageSize: number;
+}

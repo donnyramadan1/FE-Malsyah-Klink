@@ -62,12 +62,22 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
 
   useEffect(() => {
     const menus = getAuthMenus();
-    const parentMenus = menus.filter((m: MenuItem) => m.parentId === null);
-    const structured = parentMenus.map((parent: MenuItem) => ({
+
+    // Urutkan semua menu berdasarkan orderNum
+    const sortedMenus = [...menus].sort((a, b) => a.orderNum - b.orderNum);
+
+    // Ambil parent menus
+    const parentMenus = sortedMenus.filter((m) => m.parentId === null);
+
+    // Strukturkan dengan anak-anak yang sudah diurutkan juga
+    const structured = parentMenus.map((parent) => ({
       ...parent,
       icon: parent.icon,
-      subItems: menus.filter((m: MenuItem) => m.parentId === parent.id),
+      subItems: sortedMenus
+        .filter((m) => m.parentId === parent.id)
+        .sort((a, b) => a.orderNum - b.orderNum),
     }));
+
     setMenuItems(structured);
   }, []);
 

@@ -1,4 +1,3 @@
-// src/app/(protected)/menus/page.tsx
 "use client";
 import { useMenus } from "@/hooks/useMenus";
 import MenuTable from "@/components/menu/MenuTable";
@@ -8,12 +7,34 @@ import { CreateMenuDto, UpdateMenuDto, MenuDto } from "@/types/menu";
 import { motion } from "framer-motion";
 
 export default function MenuPage() {
-  const { menus, loading, createMenu, updateMenu, deleteMenu } = useMenus();
+  const {
+    menus,
+    loading,
+    currentPage,
+    totalItems,
+    pageSize,
+    fetchMenus,
+    createMenu,
+    updateMenu,
+    deleteMenu,
+    setCurrentPage,
+    searchTerm,
+    handleSearch,
+    sortField,
+    sortDirection,
+    handleSort,
+  } = useMenus();
+
   const [selectedMenu, setSelectedMenu] = useState<MenuDto | null>(null);
   const [open, setOpen] = useState(false);
 
-  // Filter out menus that are already children to prevent circular references
+  // Parent menus hanya yang bukan child
   const parentMenus = menus.filter((menu) => !menu.parentId);
+
+  const handlePageChange = async (page: number) => {
+    setCurrentPage(page);
+    await fetchMenus(page);
+  };
 
   return (
     <div className="p-4 md:p-8">
@@ -63,6 +84,15 @@ export default function MenuPage() {
             setOpen(true);
           }}
           onDelete={deleteMenu}
+          currentPage={currentPage}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={handlePageChange}
+          searchTerm={searchTerm}
+          onSearch={handleSearch}
+          sortField={sortField}
+          sortDirection={sortDirection}
+          onSort={handleSort}
         />
 
         <MenuModal
