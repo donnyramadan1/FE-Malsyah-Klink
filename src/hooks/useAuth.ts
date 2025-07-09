@@ -16,8 +16,7 @@ export const useAuth = () => {
   const handleLogin = async (username: string, password: string) => {
     setIsLoading(true);
     setError("");
-    setIsSuccess(false);
-
+    setIsSuccess(false);    
     try {
       const response = await login(username, password);
 
@@ -30,7 +29,7 @@ export const useAuth = () => {
         expires: 1,
         secure: true,
         sameSite: "strict",
-      });      
+      });
 
       Cookies.set("authUser", JSON.stringify(response.data.user), {
         expires: 1,
@@ -44,11 +43,7 @@ export const useAuth = () => {
         sameSite: "strict",
       });
 
-      Cookies.set("authMenus", JSON.stringify(response.data.menus), {
-        expires: 1,
-        secure: true,
-        sameSite: "strict",
-      });
+      localStorage.setItem("authMenus", JSON.stringify(response.data.menus));
 
       setIsSuccess(true);
 

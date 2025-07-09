@@ -70,14 +70,12 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
         let roleName = "";
         if (storedRole) {
           const parsedRoles = JSON.parse(storedRole);
-          roleName = parsedRoles[0].name
+          roleName = parsedRoles[0].name;
         }
         const hash =
-          parsed?.fullName
-            ?.split("")
-            .reduce((acc: number, char: string) => {
-              return char.charCodeAt(0) + ((acc << 5) - acc);
-            }, 0) || 0;
+          parsed?.fullName?.split("").reduce((acc: number, char: string) => {
+            return char.charCodeAt(0) + ((acc << 5) - acc);
+          }, 0) || 0;
         const color = `hsl(${Math.abs(hash) % 360}, 70%, 45%)`;
 
         setUserData({
@@ -103,9 +101,9 @@ export default function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     Cookies.remove("authToken");
-    Cookies.remove("authUser");      
+    Cookies.remove("authUser");
     Cookies.remove("authRoles");
-    Cookies.remove("authMenus");
+    localStorage.removeItem("authMenus");
     await new Promise((resolve) => setTimeout(resolve, 1000));
     router.push("/login");
   };

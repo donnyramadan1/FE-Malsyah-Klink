@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         Cookies.remove("authToken");
         Cookies.remove("authUser");
         Cookies.remove("authRoles");
-        Cookies.remove("authMenus");
+        localStorage.removeItem("authMenus");
       }
     }
   }, []);
@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     Cookies.remove("authToken");
     Cookies.remove("authUser");
     Cookies.remove("authRoles");
-    Cookies.remove("authMenus");
+    localStorage.removeItem("authMenus");
     router.push("/login");
   };
 
