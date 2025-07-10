@@ -1,19 +1,19 @@
-// src/components/supplier/SupplierTable.tsx
 "use client";
 import { SupplierDto } from "@/types/supplier";
-import {
-  FiEdit,
-  FiTrash2,
-  FiChevronUp,
-  FiChevronDown,
-  FiSearch,
-  FiTruck,
-} from "react-icons/fi";
+import { FiEdit, FiTrash2, FiTruck } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { useState } from "react";
+import { SearchBar } from "../SearchBar";
+import { Pagination } from "../Pagination";
+import { LoadingSkeleton } from "../LoadingSkeleton";
+import { DateDisplay } from "../DateDisplay";
+import { SortIcon } from "../SortIcon";
 
+// Tipe untuk arah sorting
 type SortDirection = "asc" | "desc";
+
+// Field yang bisa di-sort
 type SortableField = keyof Pick<
   SupplierDto,
   "name" | "contactPerson" | "email" | "createdAt"
@@ -50,29 +50,24 @@ export default function SupplierTable({
   sortDirection,
   onSort,
 }: Props) {
+  // State untuk dialog konfirmasi
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [supplierToDelete, setSupplierToDelete] = useState<number | null>(null);
 
+  // Fungsi untuk handle sorting
   const handleSortClick = (field: SortableField) => {
     const direction =
       sortField === field && sortDirection === "asc" ? "desc" : "asc";
     onSort(field, direction);
   };
 
-  const SortIcon = ({ field }: { field: SortableField }) => {
-    if (sortField !== field) return null;
-    return sortDirection === "asc" ? (
-      <FiChevronUp className="inline ml-1" />
-    ) : (
-      <FiChevronDown className="inline ml-1" />
-    );
-  };
-
+  // Fungsi untuk handle klik delete
   const handleDeleteClick = (id: number) => {
     setSupplierToDelete(id);
     setIsConfirmOpen(true);
   };
 
+  // Fungsi untuk konfirmasi delete
   const handleConfirmDelete = () => {
     if (supplierToDelete !== null) {
       onDelete(supplierToDelete);
@@ -81,37 +76,30 @@ export default function SupplierTable({
     setSupplierToDelete(null);
   };
 
+  // Fungsi untuk batal delete
   const handleCancelDelete = () => {
     setIsConfirmOpen(false);
     setSupplierToDelete(null);
   };
 
-  if (loading) return <LoadingSkeleton />;
+  // Tampilkan loading skeleton jika loading
+  if (loading) {
+    return <LoadingSkeleton rows={5} className="space-y-4 p-6" />;
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      {/* Search Bar */}
+      {/* Bagian Pencarian */}
       <div className="p-4 border-b border-gray-100">
-        <div className="relative max-w-xs">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FiSearch className="text-gray-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search suppliers..."
-            className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            value={searchTerm}
-            onChange={(e) => onSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                onSearch(e.currentTarget.value);
-              }
-            }}
-          />
-        </div>
+        <SearchBar
+          placeholder="Cari supplier..."
+          value={searchTerm}
+          onChange={onSearch}
+          onSearch={onSearch}
+        />
       </div>
 
-      {/* Table */}
+      {/* Tabel Supplier */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -124,24 +112,30 @@ export default function SupplierTable({
                 onClick={() => handleSortClick("contactPerson")}
               >
                 <div className="flex items-center">
-                  Contact Person
-                  <SortIcon field="contactPerson" />
+                  Kontak Person
+                  <SortIcon
+                    isActive={sortField === "contactPerson"}
+                    direction={sortDirection}
+                  />
                 </div>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Contact Info
+                Informasi Kontak
               </th>
               <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSortClick("createdAt")}
               >
                 <div className="flex items-center">
-                  Added
-                  <SortIcon field="createdAt" />
+                  Tanggal Ditambahkan
+                  <SortIcon
+                    isActive={sortField === "createdAt"}
+                    direction={sortDirection}
+                  />
                 </div>
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
+                Aksi
               </th>
             </tr>
           </thead>
@@ -181,9 +175,7 @@ export default function SupplierTable({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {new Date(supplier.createdAt).toLocaleDateString()}
-                    </div>
+                    <DateDisplay date={supplier.createdAt} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end space-x-3">
@@ -197,7 +189,7 @@ export default function SupplierTable({
                       <button
                         onClick={() => handleDeleteClick(supplier.id)}
                         className="text-red-600 hover:text-red-900 transition-colors"
-                        title="Delete"
+                        title="Hapus"
                       >
                         <FiTrash2 className="h-5 w-5" />
                       </button>
@@ -212,59 +204,34 @@ export default function SupplierTable({
                   className="px-6 py-4 text-center text-sm text-gray-500"
                 >
                   {searchTerm
-                    ? "No matching suppliers found"
-                    : "No supplier data available"}
+                    ? "Tidak ditemukan supplier yang cocok"
+                    : "Tidak ada data supplier"}
                 </td>
               </tr>
             )}
           </tbody>
         </table>
-        <div className="flex justify-between items-center p-4 border-t">
-          <div className="text-sm text-gray-600">
-            Showing {(currentPage - 1) * pageSize + 1} -{" "}
-            {Math.min(currentPage * pageSize, totalItems)} of {totalItems}
-          </div>
-          <div className="space-x-2">
-            <button
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage * pageSize >= totalItems}
-              className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        </div>
+
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={onPageChange}
+          previousText="Previous"
+          nextText="Next"
+          className="border-t"
+        />
       </div>
 
-      {/* Confirmation Dialog */}
+      {/* Dialog Konfirmasi Hapus */}
       <ConfirmDialog
         isOpen={isConfirmOpen}
-        title="Confirm Deletion"
-        message="Are you sure you want to delete this supplier? This action cannot be undone."
+        title="Konfirmasi Penghapusan"
+        message="Apakah Anda yakin ingin menghapus supplier ini? Tindakan ini tidak dapat dibatalkan."
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
       />
     </div>
   );
 }
-
-const LoadingSkeleton = () => (
-  <div className="space-y-4 p-6">
-    {[...Array(5)].map((_, i) => (
-      <div key={i} className="flex items-center space-x-4 animate-pulse">
-        <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
-        <div className="flex-1 space-y-3">
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-        </div>
-      </div>
-    ))}
-  </div>
-);

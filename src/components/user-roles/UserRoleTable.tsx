@@ -205,7 +205,7 @@ export default function UserRoleTable({
       {/* Pagination */}
       <div className="flex justify-between items-center p-4 border-t">
         <div className="text-sm text-gray-600">
-          Menampilkan {(currentPage - 1) * pageSize + 1} -{" "}
+          Showing {(currentPage - 1) * pageSize + 1} -{" "}
           {Math.min(currentPage * pageSize, totalItems)} dari {totalItems}{" "}
           pengguna
         </div>
@@ -215,14 +215,14 @@ export default function UserRoleTable({
             disabled={currentPage === 1}
             className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
           >
-            Sebelumnya
+            Previous
           </button>
           <button
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage * pageSize >= totalItems}
             className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
           >
-            Berikutnya
+            Next
           </button>
         </div>
       </div>

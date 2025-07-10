@@ -1,16 +1,18 @@
+// src/components/manufacturer/ManufacturerTable.tsx
 "use client";
-import { ManufacturerDto } from "@/types/manufacturer";
-import {
-  FiEdit,
-  FiTrash2,
-  FiChevronUp,
-  FiChevronDown,
-  FiSearch,
-  FiPackage,
-} from "react-icons/fi";
-import { motion } from "framer-motion";
-import { ConfirmDialog } from "../ConfirmDialog";
+
 import { useState } from "react";
+import { motion } from "framer-motion";
+import { FiEdit, FiTrash2, FiPackage } from "react-icons/fi";
+
+import { ManufacturerDto } from "@/types/manufacturer";
+import { ConfirmDialog } from "../ConfirmDialog";
+import { SearchBar } from "../SearchBar";
+import { Pagination } from "../Pagination";
+import { SortIcon } from "../SortIcon";
+import { LoadingSkeleton } from "../LoadingSkeleton";
+import { DateDisplay } from "../DateDisplay";
+import { StatusBadge } from "../StatusBadge";
 
 type SortDirection = "asc" | "desc";
 type SortableField = keyof Pick<
@@ -54,21 +56,14 @@ export default function ManufacturerTable({
     number | null
   >(null);
 
+  // Fungsi untuk mengatur urutan saat header diklik
   const handleSortClick = (field: SortableField) => {
     const direction =
       sortField === field && sortDirection === "asc" ? "desc" : "asc";
     onSort(field, direction);
   };
 
-  const SortIcon = ({ field }: { field: SortableField }) => {
-    if (sortField !== field) return null;
-    return sortDirection === "asc" ? (
-      <FiChevronUp className="inline ml-1" />
-    ) : (
-      <FiChevronDown className="inline ml-1" />
-    );
-  };
-
+  // Fungsi hapus
   const handleDeleteClick = (id: number) => {
     setManufacturerToDelete(id);
     setIsConfirmOpen(true);
@@ -91,28 +86,17 @@ export default function ManufacturerTable({
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      {/* Search Bar */}
+      {/* Pencarian */}
       <div className="p-4 border-b border-gray-100">
-        <div className="relative max-w-xs">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FiSearch className="text-gray-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Cari pabrikan..."
-            className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            value={searchTerm}
-            onChange={(e) => onSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                onSearch(e.currentTarget.value);
-              }
-            }}
-          />
-        </div>
+        <SearchBar
+          placeholder="Cari pabrikan..."
+          value={searchTerm}
+          onChange={onSearch}
+          onSearch={onSearch}
+        />
       </div>
 
-      {/* Table */}
+      {/* Tabel */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -121,39 +105,51 @@ export default function ManufacturerTable({
                 Pabrikan
               </th>
               <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSortClick("licenseNumber")}
+                className="px-6 py-3 cursor-pointer text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 <div className="flex items-center">
                   Nomor Lisensi
-                  <SortIcon field="licenseNumber" />
+                  <SortIcon
+                    isActive={sortField === "licenseNumber"}
+                    direction={sortDirection}
+                  />
                 </div>
               </th>
               <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSortClick("country")}
+                className="px-6 py-3 cursor-pointer text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 <div className="flex items-center">
                   Negara
-                  <SortIcon field="country" />
+                  <SortIcon
+                    isActive={sortField === "country"}
+                    direction={sortDirection}
+                  />
                 </div>
               </th>
               <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSortClick("createdAt")}
+                className="px-6 py-3 cursor-pointer text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 <div className="flex items-center">
                   Terdaftar
-                  <SortIcon field="createdAt" />
+                  <SortIcon
+                    isActive={sortField === "createdAt"}
+                    direction={sortDirection}
+                  />
                 </div>
               </th>
               <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSortClick("isActive")}
+                className="px-6 py-3 cursor-pointer text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 <div className="flex items-center">
                   Status
-                  <SortIcon field="isActive" />
+                  <SortIcon
+                    isActive={sortField === "isActive"}
+                    direction={sortDirection}
+                  />
                 </div>
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -173,7 +169,7 @@ export default function ManufacturerTable({
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                      <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
                         <FiPackage className="h-5 w-5 text-blue-600" />
                       </div>
                       <div className="ml-4">
@@ -183,33 +179,23 @@ export default function ManufacturerTable({
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {manufacturer.licenseNumber}
-                    </div>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    {manufacturer.licenseNumber}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {manufacturer.country}
-                    </div>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    {manufacturer.country}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {new Date(manufacturer.createdAt).toLocaleDateString()}
-                    </div>
+                  <td className="px-6 py-4">
+                    <DateDisplay date={manufacturer.createdAt} />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        manufacturer.isActive
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {manufacturer.isActive ? "Aktif" : "Tidak Aktif"}
-                    </span>
+                  <td className="px-6 py-4">
+                    <StatusBadge
+                      isActive={manufacturer.isActive}
+                      activeText="Aktif"
+                      inactiveText="Tidak Aktif"
+                    />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-6 py-4 text-right">
                     <div className="flex justify-end space-x-3">
                       <button
                         onClick={() => onEdit(manufacturer)}
@@ -243,33 +229,17 @@ export default function ManufacturerTable({
             )}
           </tbody>
         </table>
-
-        {/* Pagination */}
-        <div className="flex justify-between items-center p-4 border-t">
-          <div className="text-sm text-gray-600">
-            Menampilkan {(currentPage - 1) * pageSize + 1} -{" "}
-            {Math.min(currentPage * pageSize, totalItems)} dari {totalItems}
-          </div>
-          <div className="space-x-2">
-            <button
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
-            >
-              Sebelumnya
-            </button>
-            <button
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage * pageSize >= totalItems}
-              className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
-            >
-              Berikutnya
-            </button>
-          </div>
-        </div>
       </div>
 
-      {/* Confirmation Dialog */}
+      {/* Komponen Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={onPageChange}
+      />
+
+      {/* Dialog Konfirmasi Hapus */}
       <ConfirmDialog
         isOpen={isConfirmOpen}
         title="Konfirmasi Penghapusan"
@@ -280,17 +250,3 @@ export default function ManufacturerTable({
     </div>
   );
 }
-
-const LoadingSkeleton = () => (
-  <div className="space-y-4 p-6">
-    {[...Array(5)].map((_, i) => (
-      <div key={i} className="flex items-center space-x-4 animate-pulse">
-        <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
-        <div className="flex-1 space-y-3">
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-        </div>
-      </div>
-    ))}
-  </div>
-);

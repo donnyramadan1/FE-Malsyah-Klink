@@ -1,15 +1,14 @@
 "use client";
 import { MenuDto } from "@/types/menu";
-import {
-  FiEdit,
-  FiTrash2,
-  FiChevronUp,
-  FiChevronDown,
-  FiSearch,
-} from "react-icons/fi";
+import { FiEdit, FiTrash2 } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { useState } from "react";
+import { SearchBar } from "../SearchBar";
+import { Pagination } from "../Pagination";
+import { SortIcon } from "../SortIcon";
+import { StatusBadge } from "../StatusBadge";
+import { LoadingSkeleton } from "../LoadingSkeleton";
 
 type SortDirection = "asc" | "desc";
 type SortableField = keyof Pick<
@@ -57,15 +56,6 @@ export default function MenuTable({
     onSort(field, direction);
   };
 
-  const SortIcon = ({ field }: { field: SortableField }) => {
-    if (sortField !== field) return null;
-    return sortDirection === "asc" ? (
-      <FiChevronUp className="inline ml-1" />
-    ) : (
-      <FiChevronDown className="inline ml-1" />
-    );
-  };
-
   const handleDeleteClick = (id: number) => {
     setMenuToDelete(id);
     setIsConfirmOpen(true);
@@ -79,35 +69,18 @@ export default function MenuTable({
     setMenuToDelete(null);
   };
 
-  const handleCancelDelete = () => {
-    setIsConfirmOpen(false);
-    setMenuToDelete(null);
-  };
-
   if (loading) return <LoadingSkeleton />;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       {/* Search Bar */}
       <div className="p-4 border-b border-gray-100">
-        <div className="relative max-w-xs">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FiSearch className="text-gray-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search menus..."
-            className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            value={searchTerm}
-            onChange={(e) => onSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                // Optional: force search on Enter key
-                onSearch(e.currentTarget.value);
-              }
-            }}
-          />
-        </div>
+        <SearchBar
+          placeholder="Cari menus..."
+          value={searchTerm}
+          onChange={onSearch}
+          onSearch={onSearch}
+        />
       </div>
 
       {/* Table */}
@@ -121,7 +94,10 @@ export default function MenuTable({
               >
                 <div className="flex items-center">
                   Title
-                  <SortIcon field="title" />
+                  <SortIcon
+                    isActive={sortField === "title"}
+                    direction={sortDirection}
+                  />
                 </div>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -133,7 +109,10 @@ export default function MenuTable({
               >
                 <div className="flex items-center">
                   Path
-                  <SortIcon field="path" />
+                  <SortIcon
+                    isActive={sortField === "path"}
+                    direction={sortDirection}
+                  />
                 </div>
               </th>
               <th
@@ -142,7 +121,10 @@ export default function MenuTable({
               >
                 <div className="flex items-center">
                   Order
-                  <SortIcon field="orderNum" />
+                  <SortIcon
+                    isActive={sortField === "orderNum"}
+                    direction={sortDirection}
+                  />
                 </div>
               </th>
               <th
@@ -151,7 +133,10 @@ export default function MenuTable({
               >
                 <div className="flex items-center">
                   Status
-                  <SortIcon field="isActive" />
+                  <SortIcon
+                    isActive={sortField === "isActive"}
+                    direction={sortDirection}
+                  />
                 </div>
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -194,15 +179,7 @@ export default function MenuTable({
                     <div className="text-sm text-gray-900">{menu.orderNum}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        menu.isActive
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {menu.isActive ? "Active" : "Inactive"}
-                    </span>
+                    <StatusBadge isActive={menu.isActive} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end space-x-3">
@@ -238,53 +215,21 @@ export default function MenuTable({
             )}
           </tbody>
         </table>
-        <div className="flex justify-between items-center p-4 border-t">
-          <div className="text-sm text-gray-600">
-            Showing {(currentPage - 1) * pageSize + 1} -{" "}
-            {Math.min(currentPage * pageSize, totalItems)} of {totalItems}
-          </div>
-          <div className="space-x-2">
-            <button
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage * pageSize >= totalItems}
-              className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={onPageChange}
+        />
       </div>
 
-      {/* Confirmation Dialog */}
       <ConfirmDialog
         isOpen={isConfirmOpen}
         title="Confirm Deletion"
         message="Are you sure you want to delete this menu? This action cannot be undone."
         onConfirm={handleConfirmDelete}
-        onCancel={handleCancelDelete}
+        onCancel={() => setIsConfirmOpen(false)}
       />
     </div>
   );
 }
-
-const LoadingSkeleton = () => (
-  <div className="space-y-4 p-6">
-    {[...Array(5)].map((_, i) => (
-      <div key={i} className="flex items-center space-x-4 animate-pulse">
-        <div className="flex-1 space-y-3">
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-        </div>
-        <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
-        <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
-      </div>
-    ))}
-  </div>
-);

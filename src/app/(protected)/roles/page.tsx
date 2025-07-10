@@ -44,11 +44,9 @@ export default function RolePage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-              Role Management
+              Manajemen Peran
             </h1>
-            <p className="text-gray-500 mt-1">
-              Manage system roles and permissions
-            </p>
+            <p className="text-gray-500 mt-1">Kelola peran dan izin sistem</p>
           </div>
           <motion.button
             whileHover={{ scale: 1.02 }}

@@ -1,20 +1,18 @@
 // src/components/medicine/MedicineTable.tsx
 "use client";
+
 import { MedicineDto } from "@/types/medicine";
-import {
-  FiEdit,
-  FiTrash2,
-  FiChevronUp,
-  FiChevronDown,
-  FiSearch,
-  
-} from "react-icons/fi";
-import {
-  LuPill
-} from "react-icons/lu";
+import { FiEdit, FiTrash2 } from "react-icons/fi";
+import { LuPill } from "react-icons/lu";
 import { motion } from "framer-motion";
-import { ConfirmDialog } from "../ConfirmDialog";
 import { useState } from "react";
+import { ConfirmDialog } from "../ConfirmDialog";
+import { SearchBar } from "../SearchBar";
+import { Pagination } from "../Pagination";
+import { SortIcon } from "../SortIcon";
+import { DateDisplay } from "../DateDisplay";
+import { StatusBadge } from "../StatusBadge";
+import { LoadingSkeleton } from "../LoadingSkeleton";
 
 type SortDirection = "asc" | "desc";
 type SortableField = keyof Pick<
@@ -62,15 +60,6 @@ export default function MedicineTable({
     onSort(field, direction);
   };
 
-  const SortIcon = ({ field }: { field: SortableField }) => {
-    if (sortField !== field) return null;
-    return sortDirection === "asc" ? (
-      <FiChevronUp className="inline ml-1" />
-    ) : (
-      <FiChevronDown className="inline ml-1" />
-    );
-  };
-
   const handleDeleteClick = (id: number) => {
     setMedicineToDelete(id);
     setIsConfirmOpen(true);
@@ -93,57 +82,52 @@ export default function MedicineTable({
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      {/* Search Bar */}
+      {/* Pencarian Obat */}
       <div className="p-4 border-b border-gray-100">
-        <div className="relative max-w-xs">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FiSearch className="text-gray-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search medicines..."
-            className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            value={searchTerm}
-            onChange={(e) => onSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                onSearch(e.currentTarget.value);
-              }
-            }}
-          />
-        </div>
+        <SearchBar
+          placeholder="Cari obat..."
+          value={searchTerm}
+          onChange={onSearch}
+          onSearch={onSearch}
+        />
       </div>
 
-      {/* Table */}
+      {/* Tabel Obat */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Medicine
+                Obat
               </th>
               <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSortClick("code")}
               >
                 <div className="flex items-center">
-                  Code
-                  <SortIcon field="code" />
+                  Kode
+                  <SortIcon
+                    isActive={sortField === "code"}
+                    direction={sortDirection}
+                  />
                 </div>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Form
+                Bentuk
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Dosage Unit
+                Dosis
               </th>
               <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSortClick("stockQuantity")}
               >
                 <div className="flex items-center">
-                  Stock
-                  <SortIcon field="stockQuantity" />
+                  Stok
+                  <SortIcon
+                    isActive={sortField === "stockQuantity"}
+                    direction={sortDirection}
+                  />
                 </div>
               </th>
               <th
@@ -151,8 +135,11 @@ export default function MedicineTable({
                 onClick={() => handleSortClick("createdAt")}
               >
                 <div className="flex items-center">
-                  Added
-                  <SortIcon field="createdAt" />
+                  Ditambahkan
+                  <SortIcon
+                    isActive={sortField === "createdAt"}
+                    direction={sortDirection}
+                  />
                 </div>
               </th>
               <th
@@ -161,11 +148,14 @@ export default function MedicineTable({
               >
                 <div className="flex items-center">
                   Status
-                  <SortIcon field="isActive" />
+                  <SortIcon
+                    isActive={sortField === "isActive"}
+                    direction={sortDirection}
+                  />
                 </div>
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
+                Aksi
               </th>
             </tr>
           </thead>
@@ -191,52 +181,34 @@ export default function MedicineTable({
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900 font-mono">
-                      {medicine.code}
-                    </div>
+                  <td className="px-6 py-4 whitespace-nowrap font-mono text-sm text-gray-900">
+                    {medicine.code}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {medicine.formName}
-                    </div>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {medicine.formName}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {medicine.dosageUnitName}
-                    </div>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {medicine.dosageUnitName}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      <span
-                        className={`font-semibold ${
-                          medicine.stockQuantity < medicine.minStockLevel
-                            ? "text-red-600"
-                            : "text-green-600"
-                        }`}
-                      >
-                        {medicine.stockQuantity}
-                      </span>
-                      <span className="text-xs text-gray-500 ml-1">
-                        / {medicine.minStockLevel} min
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {new Date(medicine.createdAt).toLocaleDateString()}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        medicine.isActive
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
+                      className={`font-semibold ${
+                        medicine.stockQuantity < medicine.minStockLevel
+                          ? "text-red-600"
+                          : "text-green-600"
                       }`}
                     >
-                      {medicine.isActive ? "Active" : "Inactive"}
+                      {medicine.stockQuantity}
                     </span>
+                    <span className="text-xs text-gray-500 ml-1">
+                      / {medicine.minStockLevel} min
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <DateDisplay date={medicine.createdAt} />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <StatusBadge isActive={medicine.isActive} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end space-x-3">
@@ -250,7 +222,7 @@ export default function MedicineTable({
                       <button
                         onClick={() => handleDeleteClick(medicine.id)}
                         className="text-red-600 hover:text-red-900 transition-colors"
-                        title="Delete"
+                        title="Hapus"
                       >
                         <FiTrash2 className="h-5 w-5" />
                       </button>
@@ -265,59 +237,31 @@ export default function MedicineTable({
                   className="px-6 py-4 text-center text-sm text-gray-500"
                 >
                   {searchTerm
-                    ? "No matching medicines found"
-                    : "No medicine data available"}
+                    ? "Obat yang dicari tidak ditemukan."
+                    : "Belum ada data obat tersedia."}
                 </td>
               </tr>
             )}
           </tbody>
         </table>
-        <div className="flex justify-between items-center p-4 border-t">
-          <div className="text-sm text-gray-600">
-            Showing {(currentPage - 1) * pageSize + 1} -{" "}
-            {Math.min(currentPage * pageSize, totalItems)} of {totalItems}
-          </div>
-          <div className="space-x-2">
-            <button
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage * pageSize >= totalItems}
-              className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        </div>
+
+        {/* Navigasi Halaman */}
+        <Pagination
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={onPageChange}
+        />
       </div>
 
-      {/* Confirmation Dialog */}
+      {/* Dialog Konfirmasi Hapus */}
       <ConfirmDialog
         isOpen={isConfirmOpen}
-        title="Confirm Deletion"
-        message="Are you sure you want to delete this medicine? This action cannot be undone."
+        title="Konfirmasi Hapus"
+        message="Apakah Anda yakin ingin menghapus data obat ini? Tindakan ini tidak bisa dibatalkan."
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
       />
     </div>
   );
 }
-
-const LoadingSkeleton = () => (
-  <div className="space-y-4 p-6">
-    {[...Array(5)].map((_, i) => (
-      <div key={i} className="flex items-center space-x-4 animate-pulse">
-        <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
-        <div className="flex-1 space-y-3">
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-        </div>
-      </div>
-    ))}
-  </div>
-);
