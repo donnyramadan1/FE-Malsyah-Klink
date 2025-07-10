@@ -19,31 +19,29 @@ export default function RoleAssignmentModal({
   user,
   roles,
 }: RoleAssignmentModalProps) {
-  const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
+  const [selectedRole, setSelectedRole] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      setSelectedRoles(user.roles.map((role) => role.id));
+    if (user && user.roles.length > 0) {
+      setSelectedRole(user.roles[0].id);
+    } else {
+      setSelectedRole(null);
     }
   }, [user]);
 
-  const handleRoleToggle = (roleId: number) => {
-    setSelectedRoles((prev) =>
-      prev.includes(roleId)
-        ? prev.filter((id) => id !== roleId)
-        : [...prev, roleId]
-    );
+  const handleRoleSelect = (roleId: number) => {
+    setSelectedRole(roleId);
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user || selectedRole === null) return;
     setIsSubmitting(true);
     try {
-      await onSave(user.id, selectedRoles);
+      await onSave(user.id, [selectedRole]);
       onClose();
     } catch (error) {
-      console.error("Failed to update roles:", error);
+      console.error("Gagal memperbarui peran:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -77,21 +75,21 @@ export default function RoleAssignmentModal({
             >
               <Dialog.Panel className="w-full max-w-md transform rounded-2xl bg-white p-6 shadow-xl transition-all">
                 <Dialog.Title className="text-xl font-bold text-gray-900">
-                  Manage Roles for {user?.fullName}
+                  Kelola Peran untuk {user?.fullName}
                 </Dialog.Title>
                 <Dialog.Description className="mt-1 text-sm text-gray-500">
-                  Select the roles to assign to this user
+                  Pilih satu peran untuk pengguna ini
                 </Dialog.Description>
 
                 <div className="mt-6 space-y-4">
                   {roles.map((role) => (
-                    <div key={role.id} className="flex items-center">
+                    <div key={role.id} className="flex items-start">
                       <input
-                        type="checkbox"
+                        type="radio"
                         id={`role-${role.id}`}
-                        checked={selectedRoles.includes(role.id)}
-                        onChange={() => handleRoleToggle(role.id)}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        checked={selectedRole === role.id}
+                        onChange={() => handleRoleSelect(role.id)}
+                        className="h-4 w-4 mt-1 border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                       <label
                         htmlFor={`role-${role.id}`}
@@ -113,12 +111,12 @@ export default function RoleAssignmentModal({
                     disabled={isSubmitting}
                     className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
-                    Cancel
+                    Batal
                   </button>
                   <button
                     type="button"
                     onClick={handleSubmit}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || selectedRole === null}
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? (
@@ -143,10 +141,10 @@ export default function RoleAssignmentModal({
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           ></path>
                         </svg>
-                        Saving...
+                        Menyimpan...
                       </>
                     ) : (
-                      "Save Changes"
+                      "Simpan Perubahan"
                     )}
                   </button>
                 </div>
