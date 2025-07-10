@@ -1,3 +1,4 @@
+// user-roles/page.tsx
 "use client";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { useRoles } from "@/hooks/useRoles";
@@ -8,12 +9,25 @@ import { motion } from "framer-motion";
 import { UserWithRolesDto } from "@/types/userRole";
 
 export default function UserRolesPage() {
-  const { usersWithRoles, loading, error, updateRoleAssignments } =
-    useUserRoles();
+  const {
+    usersWithRoles,
+    loading,
+    error,
+    updateRoleAssignments,
+    currentPage,
+    totalItems,
+    pageSize,
+    fetchUserRoles,
+    setCurrentPage,
+    searchTerm,
+    handleSearch,
+    sortField,
+    sortDirection,
+    handleSort,
+  } = useUserRoles();
+  
   const { roles } = useRoles();
-  const [selectedUser, setSelectedUser] = useState<UserWithRolesDto | null>(
-    null
-  );
+  const [selectedUser, setSelectedUser] = useState<UserWithRolesDto | null>(null);
 
   const handleEdit = (userId: number) => {
     const user = usersWithRoles.find((u) => u.id === userId) || null;
@@ -22,6 +36,11 @@ export default function UserRolesPage() {
 
   const handleSaveRoles = async (userId: number, roleIds: number[]) => {
     await updateRoleAssignments({ userId, roleIds });
+  };
+
+  const handlePageChange = async (page: number) => {
+    setCurrentPage(page);
+    await fetchUserRoles(page);
   };
 
   return (
@@ -35,10 +54,10 @@ export default function UserRolesPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-              User Role Management
+              Manajemen Role Pengguna
             </h1>
             <p className="text-gray-500 mt-1">
-              Manage which roles are assigned to each user
+              Kelola role yang ditetapkan untuk setiap pengguna
             </p>
           </div>
         </div>
@@ -53,6 +72,15 @@ export default function UserRolesPage() {
           data={usersWithRoles}
           loading={loading}
           onEdit={handleEdit}
+          currentPage={currentPage}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={handlePageChange}
+          searchTerm={searchTerm}
+          onSearch={handleSearch}
+          sortField={sortField}
+          sortDirection={sortDirection}
+          onSort={handleSort}
         />
 
         <RoleAssignmentModal

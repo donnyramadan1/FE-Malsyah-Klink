@@ -1,28 +1,67 @@
+// user-roles/UserRoleTable.tsx
 "use client";
 import { UserWithRolesDto } from "@/types/userRole";
-import { FiEdit2, FiSearch } from "react-icons/fi";
-import { useState } from "react";
+import { FiEdit2, FiSearch, FiChevronUp, FiChevronDown } from "react-icons/fi";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 interface UserRoleTableProps {
   data: UserWithRolesDto[];
   loading: boolean;
   onEdit: (userId: number) => void;
+  currentPage: number;
+  totalItems: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  searchTerm: string;
+  onSearch: (term: string) => void;
+  sortField: keyof UserWithRolesDto;
+  sortDirection: "asc" | "desc";
+  onSort: (field: keyof UserWithRolesDto, direction: "asc" | "desc") => void;
 }
 
 export default function UserRoleTable({
   data,
   loading,
   onEdit,
+  currentPage,
+  totalItems,
+  pageSize,
+  onPageChange,
+  searchTerm,
+  onSearch,
+  sortField,
+  sortDirection,
+  onSort,
 }: UserRoleTableProps) {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const filteredData = data.filter(
-    (user) =>
-      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    setLocalSearchTerm(searchTerm);
+  }, [searchTerm]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocalSearchTerm(value);
+    setIsSearching(true);
+    onSearch(value);
+  };
+
+  const handleSortClick = (field: keyof UserWithRolesDto) => {
+    const direction =
+      sortField === field && sortDirection === "asc" ? "desc" : "asc";
+    onSort(field, direction);
+  };
+
+  const SortIcon = ({ field }: { field: keyof UserWithRolesDto }) => {
+    if (sortField !== field) return null;
+    return sortDirection === "asc" ? (
+      <FiChevronUp className="inline ml-1" />
+    ) : (
+      <FiChevronDown className="inline ml-1" />
+    );
+  };
 
   if (loading) {
     return (
@@ -51,11 +90,16 @@ export default function UserRoleTable({
           </div>
           <input
             type="text"
-            placeholder="Search users..."
+            placeholder="Cari pengguna..."
             className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={localSearchTerm}
+            onChange={handleInputChange}
           />
+          {(loading || isSearching) && (
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -63,20 +107,29 @@ export default function UserRoleTable({
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                User
+              <th
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                onClick={() => handleSortClick("fullName")}
+              >
+                <div className="flex items-center">
+                  Nama Pengguna
+                  <SortIcon field="fullName" />
+                </div>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Roles
+                Email
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Role
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
+                Aksi
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredData.length > 0 ? (
-              filteredData.map((user) => (
+            {data.length > 0 ? (
+              data.map((user) => (
                 <motion.tr
                   key={user.id}
                   initial={{ opacity: 0 }}
@@ -88,7 +141,7 @@ export default function UserRoleTable({
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
                         <span className="text-gray-600">
-                          {user.fullName.charAt(0).toUpperCase()}
+                          {user.fullName?.charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <div className="ml-4">
@@ -96,10 +149,13 @@ export default function UserRoleTable({
                           {user.fullName}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {user.email}
+                          @{user.username}
                         </div>
                       </div>
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{user.email}</div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-2">
@@ -114,7 +170,7 @@ export default function UserRoleTable({
                         ))
                       ) : (
                         <span className="text-sm text-gray-400">
-                          No roles assigned
+                          Tidak ada role
                         </span>
                       )}
                     </div>
@@ -123,7 +179,7 @@ export default function UserRoleTable({
                     <button
                       onClick={() => onEdit(user.id)}
                       className="text-blue-600 hover:text-blue-900 transition-colors"
-                      title="Edit roles"
+                      title="Edit role"
                     >
                       <FiEdit2 className="h-5 w-5" />
                     </button>
@@ -133,17 +189,42 @@ export default function UserRoleTable({
             ) : (
               <tr>
                 <td
-                  colSpan={3}
+                  colSpan={4}
                   className="px-6 py-4 text-center text-sm text-gray-500"
                 >
                   {searchTerm
-                    ? "No matching users found"
-                    : "No users available"}
+                    ? "Tidak ditemukan pengguna yang cocok"
+                    : "Tidak ada data pengguna"}
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-between items-center p-4 border-t">
+        <div className="text-sm text-gray-600">
+          Menampilkan {(currentPage - 1) * pageSize + 1} -{" "}
+          {Math.min(currentPage * pageSize, totalItems)} dari {totalItems}{" "}
+          pengguna
+        </div>
+        <div className="space-x-2">
+          <button
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
+          >
+            Sebelumnya
+          </button>
+          <button
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage * pageSize >= totalItems}
+            className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
+          >
+            Berikutnya
+          </button>
+        </div>
       </div>
     </div>
   );
