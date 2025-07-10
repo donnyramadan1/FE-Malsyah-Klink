@@ -16,24 +16,6 @@ export interface UpdateMedicineFormDto extends CreateMedicineFormDto {
   isActive: boolean;
 }
 
-export interface DosageUnitDto {
-  id: number;
-  name: string;
-  code: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateDosageUnitDto {
-  name: string;
-  code: string;
-}
-
-export interface UpdateDosageUnitDto extends CreateDosageUnitDto {
-  isActive: boolean;
-}
-
 export interface MedicineDto {
   id: number;
   name: string;

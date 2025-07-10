@@ -5,7 +5,7 @@ import {
   CreateDosageUnitDto,
   UpdateDosageUnitDto,
   DosageUnitDto,
-} from "@/types/medicine";
+} from "@/types/dosage-unit";
 import { motion } from "framer-motion";
 
 type FormData = CreateDosageUnitDto | UpdateDosageUnitDto;
@@ -23,11 +23,18 @@ export default function DosageUnitForm({
 }: Props) {
   const isEdit = !!dosageUnit;
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<FormData>({
-    name: "",
-    code: "",
-    ...(isEdit && { isActive: true }),
-  });
+  const [formData, setFormData] = useState<FormData>(
+    isEdit
+      ? {
+          name: dosageUnit?.name ?? "",
+          code: dosageUnit?.code ?? "",
+          isActive: dosageUnit?.isActive ?? true,
+        }
+      : {
+          name: "",
+          code: "",
+        }
+  );
 
   useEffect(() => {
     if (isEdit && dosageUnit) {
@@ -40,9 +47,7 @@ export default function DosageUnitForm({
   }, [dosageUnit, isEdit]);
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev: any) => ({
@@ -68,55 +73,66 @@ export default function DosageUnitForm({
       exit={{ opacity: 0, y: -20 }}
       className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6"
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Nama Satuan <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-            onChange={handleChange}
-            placeholder="Misal: Miligram, Mililiter"
-          />
-        </div>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">
+        {isEdit ? "Edit Satuan Dosis" : "Tambah Satuan Dosis Baru"}
+      </h2>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Kode <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            name="code"
-            value={formData.code}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-            onChange={handleChange}
-            placeholder="Misal: mg, ml"
-          />
-        </div>
-
-        {isEdit && "isActive" in formData && (
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status
+              Nama Satuan <span className="text-red-500">*</span>
             </label>
-            <select
-              name="isActive"
-              value={String(formData.isActive)}
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               onChange={handleChange}
-            >
-              <option value="true">Aktif</option>
-              <option value="false">Nonaktif</option>
-            </select>
+              placeholder="Contoh: Tablet, Kapsul, ml"
+            />
           </div>
-        )}
 
-        <div className="flex justify-end gap-3 pt-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Kode Satuan <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="code"
+              value={formData.code}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              onChange={handleChange}
+              placeholder="Kode unik (contoh: TAB, CAP)"
+            />
+          </div>
+
+          {isEdit && "isActive" in formData && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status
+              </label>
+              <select
+                name="isActive"
+                value={String(formData.isActive)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                onChange={handleChange}
+              >
+                <option value="true">Aktif</option>
+                <option value="false">Nonaktif</option>
+              </select>
+            </div>
+          )}
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="flex justify-end gap-3 pt-6"
+        >
           <button
             type="button"
             onClick={onClose}
@@ -152,9 +168,9 @@ export default function DosageUnitForm({
                 ></path>
               </svg>
             )}
-            {isEdit ? "Simpan Perubahan" : "Tambah Satuan Dosis"}
+            {isEdit ? "Simpan Perubahan" : "Tambah Satuan"}
           </button>
-        </div>
+        </motion.div>
       </form>
     </motion.div>
   );

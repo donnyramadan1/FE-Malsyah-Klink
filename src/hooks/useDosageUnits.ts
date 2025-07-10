@@ -1,19 +1,41 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import {
   DosageUnitDto,
   CreateDosageUnitDto,
   UpdateDosageUnitDto,
-} from "@/types/medicine";
+} from "@/types/dosage-unit";
+
+type SortableField = keyof Pick<
+  DosageUnitDto,
+  "name" | "code" | "isActive" | "createdAt"
+>;
+type SortDirection = "asc" | "desc";
 
 export function useDosageUnits() {
   const [dosageUnits, setDosageUnits] = useState<DosageUnitDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  const [sortField, setSortField] = useState<SortableField>("name");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
   const pageSize = 10;
+
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+    return () => clearTimeout(timerId);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    fetchDosageUnits(1);
+  }, [debouncedSearchTerm, sortField, sortDirection]);
 
   const fetchDosageUnits = async (page: number = 1) => {
     setLoading(true);
@@ -22,15 +44,28 @@ export function useDosageUnits() {
         params: {
           page,
           pageSize,
-          search: searchTerm,
+          search: debouncedSearchTerm,
+          orderBy: sortField,
+          ascending: sortDirection === "asc",
         },
       });
-      setDosageUnits(res.data.data.items);
-      setTotalItems(res.data.data.totalItems);
-      setCurrentPage(page);
+
+      const data = res.data.data;
+      setDosageUnits(data.items);
+      setCurrentPage(data.page);
+      setTotalItems(data.totalItems);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+  };
+
+  const handleSort = (field: SortableField, direction: SortDirection) => {
+    setSortField(field);
+    setSortDirection(direction);
   };
 
   const createDosageUnit = async (data: CreateDosageUnitDto) => {
@@ -48,10 +83,6 @@ export function useDosageUnits() {
     await fetchDosageUnits(currentPage);
   };
 
-  useEffect(() => {
-    fetchDosageUnits();
-  }, [searchTerm]);
-
   return {
     dosageUnits,
     loading,
@@ -59,11 +90,14 @@ export function useDosageUnits() {
     totalItems,
     pageSize,
     searchTerm,
-    setSearchTerm,
+    sortField,
+    sortDirection,
     fetchDosageUnits,
     createDosageUnit,
     updateDosageUnit,
     deleteDosageUnit,
     setCurrentPage,
+    handleSearch,
+    handleSort,
   };
 }
