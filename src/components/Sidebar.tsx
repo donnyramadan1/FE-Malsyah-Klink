@@ -19,6 +19,7 @@ import {
   FiDatabase,
   FiChevronRight,
   FiDroplet,
+  FiPackage,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -52,7 +53,8 @@ const iconMap: Record<string, React.ReactNode> = {
   FiBarChart2: <FiBarChart2 className="text-lg" />,
   FiHeart: <FiHeart className="text-lg" />,
   FiDatabase: <FiDatabase className="text-lg" />,
-  FiDroplet: <FiDroplet className= "text-lg"/>
+  FiDroplet: <FiDroplet className= "text-lg"/>,
+  FiPackage: <FiPackage className= "text-lg"/>,
 };
 
 const Sidebar = ({ onClose }: { onClose?: () => void }) => {
