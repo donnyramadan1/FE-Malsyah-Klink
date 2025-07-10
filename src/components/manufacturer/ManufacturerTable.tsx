@@ -99,7 +99,7 @@ export default function ManufacturerTable({
           </div>
           <input
             type="text"
-            placeholder="Search manufacturers..."
+            placeholder="Cari pabrikan..."
             className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             value={searchTerm}
             onChange={(e) => onSearch(e.target.value)}
@@ -118,14 +118,14 @@ export default function ManufacturerTable({
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Manufacturer
+                Pabrikan
               </th>
               <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSortClick("licenseNumber")}
               >
                 <div className="flex items-center">
-                  License Number
+                  Nomor Lisensi
                   <SortIcon field="licenseNumber" />
                 </div>
               </th>
@@ -134,7 +134,7 @@ export default function ManufacturerTable({
                 onClick={() => handleSortClick("country")}
               >
                 <div className="flex items-center">
-                  Country
+                  Negara
                   <SortIcon field="country" />
                 </div>
               </th>
@@ -143,7 +143,7 @@ export default function ManufacturerTable({
                 onClick={() => handleSortClick("createdAt")}
               >
                 <div className="flex items-center">
-                  Registered
+                  Terdaftar
                   <SortIcon field="createdAt" />
                 </div>
               </th>
@@ -157,7 +157,7 @@ export default function ManufacturerTable({
                 </div>
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
+                Aksi
               </th>
             </tr>
           </thead>
@@ -206,7 +206,7 @@ export default function ManufacturerTable({
                           : "bg-red-100 text-red-800"
                       }`}
                     >
-                      {manufacturer.isActive ? "Active" : "Inactive"}
+                      {manufacturer.isActive ? "Aktif" : "Tidak Aktif"}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -214,14 +214,14 @@ export default function ManufacturerTable({
                       <button
                         onClick={() => onEdit(manufacturer)}
                         className="text-blue-600 hover:text-blue-900 transition-colors"
-                        title="Edit"
+                        title="Ubah"
                       >
                         <FiEdit className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => handleDeleteClick(manufacturer.id)}
                         className="text-red-600 hover:text-red-900 transition-colors"
-                        title="Delete"
+                        title="Hapus"
                       >
                         <FiTrash2 className="h-5 w-5" />
                       </button>
@@ -236,17 +236,19 @@ export default function ManufacturerTable({
                   className="px-6 py-4 text-center text-sm text-gray-500"
                 >
                   {searchTerm
-                    ? "No matching manufacturers found"
-                    : "No manufacturer data available"}
+                    ? "Data pabrikan tidak ditemukan"
+                    : "Belum ada data pabrikan"}
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+
+        {/* Pagination */}
         <div className="flex justify-between items-center p-4 border-t">
           <div className="text-sm text-gray-600">
-            Showing {(currentPage - 1) * pageSize + 1} -{" "}
-            {Math.min(currentPage * pageSize, totalItems)} of {totalItems}
+            Menampilkan {(currentPage - 1) * pageSize + 1} -{" "}
+            {Math.min(currentPage * pageSize, totalItems)} dari {totalItems}
           </div>
           <div className="space-x-2">
             <button
@@ -254,14 +256,14 @@ export default function ManufacturerTable({
               disabled={currentPage === 1}
               className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
             >
-              Previous
+              Sebelumnya
             </button>
             <button
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage * pageSize >= totalItems}
               className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
             >
-              Next
+              Berikutnya
             </button>
           </div>
         </div>
@@ -270,8 +272,8 @@ export default function ManufacturerTable({
       {/* Confirmation Dialog */}
       <ConfirmDialog
         isOpen={isConfirmOpen}
-        title="Confirm Deletion"
-        message="Are you sure you want to delete this manufacturer? This action cannot be undone."
+        title="Konfirmasi Penghapusan"
+        message="Apakah Anda yakin ingin menghapus pabrikan ini? Tindakan ini tidak dapat dibatalkan."
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
       />

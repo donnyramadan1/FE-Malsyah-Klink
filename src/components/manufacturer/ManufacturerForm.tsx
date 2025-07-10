@@ -79,7 +79,7 @@ export default function ManufacturerForm({
       className="max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6"
     >
       <h2 className="text-2xl font-bold text-gray-800 mb-6">
-        {isEdit ? "Edit Pabrikan" : "Buat Pabrikan Baru"}
+        {isEdit ? "Edit Data Pabrikan" : "Tambah Pabrikan Baru"}
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -101,7 +101,7 @@ export default function ManufacturerForm({
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 onChange={handleChange}
-                placeholder="Manufacturer name"
+                placeholder="Nama pabrikan"
               />
             </div>
 
@@ -116,13 +116,13 @@ export default function ManufacturerForm({
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 onChange={handleChange}
-                placeholder="Manufacturer license number"
+                placeholder="Nomor lisensi pabrikan"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Negara <span className="text-red-500">*</span>
+                Negara Asal <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -131,7 +131,7 @@ export default function ManufacturerForm({
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 onChange={handleChange}
-                placeholder="Country of origin"
+                placeholder="Negara asal"
               />
             </div>
           </motion.div>
@@ -152,8 +152,8 @@ export default function ManufacturerForm({
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               onChange={handleChange}
             >
-              <option value="true">Active</option>
-              <option value="false">Inactive</option>
+              <option value="true">Aktif</option>
+              <option value="false">Tidak Aktif</option>
             </select>
           </motion.div>
         )}
@@ -199,7 +199,7 @@ export default function ManufacturerForm({
                 ></path>
               </svg>
             )}
-            {isEdit ? "Simpan Perubahan" : "Buat Pabrikan"}
+            {isEdit ? "Simpan Perubahan" : "Simpan Pabrikan"}
           </button>
         </motion.div>
       </form>

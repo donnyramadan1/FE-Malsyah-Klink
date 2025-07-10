@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/components/medicine/MedicineForm.tsx
 "use client";
 import { useState, useEffect } from "react";
 import {
@@ -99,7 +98,7 @@ export default function MedicineForm({
       className="max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6"
     >
       <h2 className="text-2xl font-bold text-gray-800 mb-6">
-        {isEdit ? "Edit Medicine" : "Create New Medicine"}
+        {isEdit ? "Edit Obat" : "Tambah Obat Baru"}
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -113,7 +112,7 @@ export default function MedicineForm({
           >
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Name <span className="text-red-500">*</span>
+                Nama Obat <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -122,13 +121,13 @@ export default function MedicineForm({
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 onChange={handleChange}
-                placeholder="Medicine name"
+                placeholder="Masukkan nama obat"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Code <span className="text-red-500">*</span>
+                Kode Obat <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -137,13 +136,13 @@ export default function MedicineForm({
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 onChange={handleChange}
-                placeholder="Medicine code"
+                placeholder="Kode unik obat"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Form <span className="text-red-500">*</span>
+                Bentuk Obat <span className="text-red-500">*</span>
               </label>
               <select
                 name="formId"
@@ -152,7 +151,7 @@ export default function MedicineForm({
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 onChange={handleChange}
               >
-                <option value={0}>Select Form</option>
+                <option value={0}>Pilih bentuk obat</option>
                 {medicineForms.map((form) => (
                   <option key={form.id} value={form.id}>
                     {form.name}
@@ -171,7 +170,7 @@ export default function MedicineForm({
           >
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Dosage Unit <span className="text-red-500">*</span>
+                Satuan Dosis <span className="text-red-500">*</span>
               </label>
               <select
                 name="dosageUnitId"
@@ -180,7 +179,7 @@ export default function MedicineForm({
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 onChange={handleChange}
               >
-                <option value={0}>Select Unit</option>
+                <option value={0}>Pilih satuan</option>
                 {dosageUnits.map((unit) => (
                   <option key={unit.id} value={unit.id}>
                     {unit.name} ({unit.code})
@@ -191,7 +190,7 @@ export default function MedicineForm({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Minimum Stock Level <span className="text-red-500">*</span>
+                Stok Minimum <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
@@ -201,7 +200,7 @@ export default function MedicineForm({
                 min={0}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 onChange={handleChange}
-                placeholder="Minimum stock quantity"
+                placeholder="Jumlah minimal persediaan"
               />
             </div>
 
@@ -216,8 +215,8 @@ export default function MedicineForm({
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                   onChange={handleChange}
                 >
-                  <option value="true">Active</option>
-                  <option value="false">Inactive</option>
+                  <option value="true">Aktif</option>
+                  <option value="false">Nonaktif</option>
                 </select>
               </div>
             )}
@@ -236,7 +235,7 @@ export default function MedicineForm({
             disabled={isSubmitting}
             className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
-            Cancel
+            Batal
           </button>
           <button
             type="submit"
@@ -265,7 +264,7 @@ export default function MedicineForm({
                 ></path>
               </svg>
             )}
-            {isEdit ? "Save Changes" : "Create Medicine"}
+            {isEdit ? "Simpan Perubahan" : "Tambah Obat"}
           </button>
         </motion.div>
       </form>
