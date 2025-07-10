@@ -16,7 +16,7 @@ export const useAuth = () => {
   const handleLogin = async (username: string, password: string) => {
     setIsLoading(true);
     setError("");
-    setIsSuccess(false);    
+    setIsSuccess(false);
     try {
       const response = await login(username, password);
 
@@ -49,14 +49,9 @@ export const useAuth = () => {
 
       const loginContainer = document.getElementById("login-container");
       if (loginContainer) {
-        loginContainer.classList.add(
-          "opacity-0",
-          "transition-opacity",
-          "duration-500"
-        );
         setTimeout(() => {
           router.push("/dashboard");
-        }, 500);
+        }, 1000);
       } else {
         router.push("/dashboard");
       }
