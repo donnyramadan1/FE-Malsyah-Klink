@@ -9,6 +9,7 @@ import {
   AllergyTypeDto,
 } from "@/types/allergy";
 import { motion } from "framer-motion";
+import { FaPlus } from "react-icons/fa";
 
 export default function AllergyTypesPage() {
   const {
@@ -52,29 +53,20 @@ export default function AllergyTypesPage() {
               Kelola data jenis alergi pasien
             </p>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => {
-              setSelectedAllergyType(null);
-              setOpen(true);
-            }}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2 px-6 rounded-lg transition-all shadow-md flex items-center gap-2"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
+          <div className="flex items-center gap-3">            
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                setSelectedAllergyType(null);
+                setOpen(true);
+              }}
+              className="bg-gradient-to-r from-[#0f355d] to-[#1a4b7e] hover:from-[#1a4b7e] hover:to-[#0f355d] text-white py-2 px-6 rounded-lg transition-all shadow-md flex items-center gap-2"
             >
-              <path
-                fillRule="evenodd"
-                d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Tambah Jenis Alergi
-          </motion.button>
+              <FaPlus className="h-4 w-4" />
+              Tambah Jenis Alergi
+            </motion.button>
+          </div>
         </div>
 
         <AllergyTypeTable

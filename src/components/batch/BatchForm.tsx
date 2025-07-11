@@ -447,7 +447,7 @@ export default function BatchForm({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-lg shadow-sm transition-all disabled:opacity-50 flex items-center gap-2"
+            className="px-5 py-2.5 bg-gradient-to-r from-[#0f355d] to-[#1a4b7e] hover:from-[#1a4b7e] hover:to-[#0f355d] text-white rounded-lg shadow-sm transition-all disabled:opacity-50 flex items-center gap-2"
           >
             {isSubmitting ? (
               <>
